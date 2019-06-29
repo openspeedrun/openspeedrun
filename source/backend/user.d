@@ -70,6 +70,44 @@ enum Powers : ushort {
 }
 
 /++
+    User set pronouns
++/
+struct Pronouns {
+    /++
+        Subject part of pronoun
+        eg. they
+    +/
+    string subject = "they";
+
+    /++
+        Object part of pronoun
+        eg. them
+    +/
+    string object = "them";
+
+    /++
+        Posessive part of pronoun
+        eg. their
+    +/
+    string possesive = "their";
+}
+
+/// Default pronouns for he/him
+Pronouns heHimPronouns() {
+    return Pronouns("he", "him", "his");
+}
+
+/// Default pronouns for she/her
+Pronouns sheHerPronouns() {
+    return Pronouns("she", "her", "hers");
+}
+
+/// Default pronouns for they/them
+Pronouns theyThemPronouns() {
+    return Pronouns("they", "them", "their");
+}
+
+/++
     A user
 +/
 class User {
@@ -169,6 +207,15 @@ class User {
     UserAuth auth;
 
     /++
+        The user's pronouns
+
+        If not set, pronouns will default to they/them
+    +/
+    @name("pronouns")
+    @optional
+    Pronouns pronouns;
+
+    /++
         For serialized instances
     +/
     this() { }
@@ -242,11 +289,39 @@ class User {
     void update() {
         DATABASE["speedrun.users"].update(["_id": username], this);
     }
+
+    FEUser getInfo() {
+        return FEUser(username, displayName, verified, pronouns);
+    }
 }
 
 /++
     Frontend representation of a user.
 +/
 struct FEUser {
+    /++
+        User's username (used during login)
+    +/
+    @name("id")
+    string username;
 
+    /++
+        User's display name
+    +/
+    @name("display_name")
+    string displayName;
+
+    /++
+        Wether the user has verified their email
+    +/
+    @name("verified")
+    bool verified;
+
+    /++
+        The user's pronouns
+
+        If not set, pronouns will default to they/them
+    +/
+    @name("pronouns")
+    Pronouns pronouns;
 }

@@ -71,18 +71,6 @@ interface IAuthenticationEndpoint {
     Status logout(Token token);
 
     /++
-        Registers a new user
-
-        DO NOTE: 
-        A user is not the same as a runner.
-        A user will be converted to a runner when they post their first run.
-    +/
-    @method(HTTPMethod.POST)
-    @path("/register/:username")
-    @bodyParam("data")
-    Status register(string _username, RegData data);
-
-    /++
         Verifies a new user allowing them to create/post runs, etc.
     +/
     @method(HTTPMethod.POST)
@@ -99,9 +87,17 @@ interface IAuthenticationEndpoint {
 interface IUserEndpoint {
 
     /++
+        Gets user info
+    +/
+    @path("/:userId")
+    @method(HTTPMethod.GET)
+    StatusT!FEUser user(string _userId);
+
+    /++
         Endpoint changes user info
     +/
     @path("/update")
+    @method(HTTPMethod.GET)
     Status update(string token, User data);
 
     /++
@@ -173,23 +169,22 @@ class AuthenticationEndpoint : IAuthenticationEndpoint {
         return Status(StatusCode.StatusInvalid);
     }
 
-    Status register(string username, RegData data) {
-        try {
-            User.register(username, data.email, data.password);
-            return Status(StatusCode.StatusOK);
-        } catch(Exception ex) {
-            return Status.error(StatusCode.StatusOK, ex.msg);
-        }
-    }
-
     Status verify(string verifykey) {
-        // TODO: verify auser
+        // TODO: verify a user
         return Status(StatusCode.StatusOK);
     }
 }
 
 @trusted
 class UserEndpoint : IUserEndpoint {
+    StatusT!FEUser user(string userId) {
+        User user = User.get(userId);
+        if (user is null) {
+            return StatusT!FEUser.error(StatusCode.StatusNotFound, "user not found!");
+        }
+        return StatusT!FEUser(StatusCode.StatusOK, user.getInfo());
+    }
+
     Status update(string token, User data) {
         // Make sure the token is valid
         if (!SESSIONS.isValid(token)) 

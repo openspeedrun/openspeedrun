@@ -23,6 +23,7 @@ enum StatusCode : string {
     StatusOK = "ok",
     StatusInvalid = "invalid",
     StatusDenied = "access_denied",
+    StatusNotFound = "not_found",
     StatusInternalErr = "internal_error"
 }
 
@@ -42,7 +43,7 @@ struct Status {
         Error message (if any)
     +/
     @optional
-    string message;
+    string message = null;
 
     this(StatusCode code) {
         this.status = code;
@@ -74,7 +75,7 @@ struct StatusT(T) {
         Error message (if any)
     +/
     @optional
-    string message;
+    string message = null;
 
     /++
         The data for the status

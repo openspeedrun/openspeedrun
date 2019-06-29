@@ -14,148 +14,11 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 +/
 module api.game;
-/*import vibe.web.rest;
-import vibe.data.serialization;
-import db;
+import vibe.web.rest;
 import session;
 import api.common;
-import api.user;
-import vibe.db.mongo.collection : QueryFlags;
-import vibe.db.mongo.cursor : MongoCursor;
-import std.algorithm.searching : canFind;
 import backend.user;
-
-/++
-    A Game
-+/
-@trusted
-class Game {
-    /++
-        ID of the game
-    +/
-    @name("_id")
-    string id;
-
-    /++
-        Wether this game has been approved
-    +/
-    bool approved;
-
-    /++
-        Name of the game
-    +/
-    @name("name")
-    string gameName;
-
-    /++
-        Description of game
-    +/
-    string description;
-
-    /++
-        The owner of the game on-site
-
-        owner = admin but can't be demoted
-    +/
-    string owner;
-
-    /++
-        List of admins
-    +/
-    string[] admins;
-
-    /++
-        List of mods
-    +/
-    string[] mods;
-
-    /++
-        FullGame Categories
-    +/
-    string[] fgCategories;
-
-    /++
-        Individual Level Categories
-    +/
-    string[] ilCategories;
-
-    /++
-        Levels
-    +/
-    string[] levels;
-
-    this() {}
-
-    this(string id, string name, string description, string adminId) {
-        this.id = id;
-        this.gameName = name;
-        this.description = description;
-        this.approved = false;
-        this.owner = adminId;
-    }
-}
-
-Game getGame(string gameId) {
-    return DATABASE["speedrun.games"].findOne!Game(["_id": gameId]);
-}
-
-MongoCursor!Game searchGames(string query, int page = 0, int countPerPage = 20) {
-    return DATABASE["speedrun.games"].find!Game(
-        [
-            "$or": [
-                ["_id": [ "$regex": query ]],
-                ["name": [ "$regex": query ]],
-                ["description": [ "$regex": query ]]
-            ]
-        ], 
-        null, 
-        QueryFlags.None, 
-        page*countPerPage, 
-        countPerPage);
-}
-
-/++
-    Creates a new UNAPPROVED game
-+/
-Game newGame(string id, string displayName, string description, string admin) {
-    string aid = id.formatId();
-
-    if (DATABASE["speedrun.games"].count(["_id": id]) > 0) return null;
-    Game game = new Game(aid, displayName, description, admin);
-    DATABASE["speedrun.games"].insert(game);
-    return game;
-}
-
-bool isOwner(Game game, string userId) {
-    return game.owner == userId;
-}
-
-bool isAdmin(Game game, string userId) {
-    return game.admins.canFind(userId) || isOwner(game, userId);
-}
-
-bool isMod(Game game, string userId) {
-    return game.mods.canFind(userId) || isAdmin(game, userId);
-}
-
-void setUserRank(Game game, string userId) {
-
-}
-
-/++
-    Approves game
-+/
-bool acceptGameFromId(string id) {
-    Game game = getGame(id);
-    if (game is null) return false;
-    game.approved = true;
-    DATABASE["speedrun.games"].update(["_id": id], game);
-    return true;
-}
-
-void denyGameFromId(string id) {
-    DATABASE["speedrun.games"].remove(["_id": id]);
-}
+import backend.game;
 
 struct GameCreationData {
     string token;
@@ -224,13 +87,13 @@ interface IGameEndpoint {
 class GameEndpoint : IGameEndpoint {
 
     StatusT!Game game(string _gameId) {
-        Game game = getGame(_gameId);
+        Game game = Game.get(_gameId);
         return StatusT!Game(game !is null ? StatusCode.StatusOK : StatusCode.StatusInvalid, game);
     }
 
     StatusT!(Game[]) search(string query, int _page = 0, int pgCount = 20, bool showPending = false) {
         Game[] games;
-        foreach(game; searchGames(query, _page, pgCount)) {
+        foreach(game; Game.search(query, _page, pgCount)) {
             if (!showPending && !game.approved) continue;
             games ~= game;
         }
@@ -246,10 +109,10 @@ class GameEndpoint : IGameEndpoint {
         if (!User.getValid(SESSIONS[data.token].user)) return Status(StatusCode.StatusInvalid);
 
         // Make sure Game DOES NOT exists.
-        if (getGame(_gameId) !is null) return Status(StatusCode.StatusInvalid);
+        if (Game.get(_gameId) !is null) return Status(StatusCode.StatusInvalid);
 
 
-        Game game = newGame(_gameId, data.name, data.description, SESSIONS[data.token].user);
+        Game game = new Game(_gameId, data.name, data.description, SESSIONS[data.token].user);
         return game !is null ? Status(StatusCode.StatusOK) : Status(StatusCode.StatusInvalid);
     }
 
@@ -259,7 +122,7 @@ class GameEndpoint : IGameEndpoint {
             return Status(StatusCode.StatusDenied);
         
         // Make sure the game exists
-        if (getGame(_gameId) is null) return Status(StatusCode.StatusInvalid);
+        if (Game.get(_gameId) is null) return Status(StatusCode.StatusInvalid);
 
         // Make sure the user has the permissions to accept the CSS
         if (!User.getValid(SESSIONS[token].user)) return Status(StatusCode.StatusInvalid);
@@ -274,7 +137,8 @@ class GameEndpoint : IGameEndpoint {
             return Status(StatusCode.StatusDenied);
         
         // Make sure the game exists
-        if (getGame(_gameId) is null) return Status(StatusCode.StatusInvalid);
+        Game game = Game.get(_gameId);
+        if (game is null) return Status(StatusCode.StatusInvalid);
 
         // Make sure the user has the permissions to accept the CSS
         if (!User.getValid(SESSIONS[token].user)) return Status(StatusCode.StatusInvalid);
@@ -282,7 +146,7 @@ class GameEndpoint : IGameEndpoint {
         if (user.power < Powers.Mod) 
             return Status(StatusCode.StatusDenied);
 
-        acceptGameFromId(_gameId);
+        game.accept();
         return Status(StatusCode.StatusOK);
     }
 
@@ -292,7 +156,8 @@ class GameEndpoint : IGameEndpoint {
             return Status(StatusCode.StatusDenied);
         
         // Make sure the game exists
-        if (getGame(_gameId) is null) return Status(StatusCode.StatusInvalid);
+        Game game = Game.get(_gameId);
+        if (game is null) return Status(StatusCode.StatusInvalid);
 
         // Make sure the user has the permissions neccesary
         if (!User.getValid(SESSIONS[token].user)) return Status(StatusCode.StatusInvalid);
@@ -300,7 +165,7 @@ class GameEndpoint : IGameEndpoint {
         if (user.power < Powers.Mod) 
             return Status(StatusCode.StatusDenied);
 
-        denyGameFromId(_gameId);
+        game.deleteGame();
         return Status(StatusCode.StatusOK);
     }
-}*/
+}

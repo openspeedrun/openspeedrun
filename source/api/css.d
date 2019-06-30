@@ -14,43 +14,18 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 +/
 module api.css;
-/*import vibe.web.rest;
-import vibe.data.serialization;
-import db;
+import vibe.web.rest;
 import session;
 import api.common;
-import backend.user;
 import api.game;
+import backend.user;
+import backend.game;
+import backend.css;
 
 /++
-    Custom user-set css
+    Custom user-set cssFighting twitter because it's a
 +/
-struct CSS {
-    /++
-        The game this CSS instance belongs to
-    +/
-    @name("_id")
-    @optional
-    string game;
 
-    /++
-        Approved CSS to be viewed on-site
-    +/
-    @optional
-    string approvedCSS;
-
-    /++
-        CSS set by user
-
-        THIS CSS SHOULD FOR SECURITY REASONS *NOT* BE SHOWN BY DEFAULT.
-    +/
-    @optional
-    string css;
-}
-
-CSS getCSS(string game) {
-    return DATABASE["speedrun.css"].findOne!CSS(["_id": game]);
-}
 
 @path("/css")
 interface ICSSEndpoint {
@@ -122,10 +97,10 @@ struct CSSData {
 class CSSEndpoint : ICSSEndpoint {
     string css(string _gameId, bool showPending = false) {
         // Make sure Game exists.
-        if (getGame(_gameId) is null) return StatusCode.StatusInvalid;
+        if (Game.get(_gameId) is null) return StatusCode.StatusInvalid;
 
         // Get CSS and return string with CSS data.
-        CSS css = getCSS(_gameId);
+        CSS css = CSS.get(_gameId);
         return showPending ? css.css : css.approvedCSS;
     }
 
@@ -140,31 +115,26 @@ class CSSEndpoint : ICSSEndpoint {
         if (!User.getValid(SESSIONS[data.token].user)) return Status(StatusCode.StatusInvalid);
 
         // Make sure the game exists
-        Game game = getGame(_gameId);
+        Game game = Game.get(_gameId);
         if (game is null) return Status(StatusCode.StatusInvalid);
 
         // Make sure the user is an admin of the game
-        if (!game.admins.canFind(SESSIONS[data.token].user))
+        if (!game.isAdmin(SESSIONS[data.token].user))
             return Status(StatusCode.StatusDenied);
 
-        if (DATABASE["speedrun.css"].count(["_id": _gameId]) > 0) {
-            // Get already existing CSS and set the pending css to new value
-            CSS css = getCSS(_gameId);
-            css.css = data.css;
+        CSS css = CSS.get(_gameId);
 
-            // Put result in to database
-            DATABASE["speedrun.css"].update(["id": _gameId], css);
+        if (css !is null) {
+            // Get already existing CSS and set the pending css to new value
+            css.css = data.css;
+            css.update();
             return Status(StatusCode.StatusOK);
         } else {
-            // Create new CSS instance, bind it to the game and set the pending css to the new value
-            CSS css;
-            css.game = _gameId;
-            css.css = data.css;
 
-            // Put result in to database
-            DATABASE["speedrun.css"].insert(css);
-            return Status(StatusCode.StatusOK);
+            // Create new CSS.
+            new CSS(_gameId, data.css);
         }
+        return Status(StatusCode.StatusOK);
     }
 
     Status acceptCSS(string _gameId, string token) {
@@ -173,7 +143,7 @@ class CSSEndpoint : ICSSEndpoint {
             return Status(StatusCode.StatusDenied);
         
         // Make sure the game exists
-        if (getGame(_gameId) is null) return Status(StatusCode.StatusInvalid);
+        if (Game.get(_gameId) is null) return Status(StatusCode.StatusInvalid);
 
         // Make sure the user has the permissions to accept the CSS
         if (!User.getValid(SESSIONS[token].user)) return Status(StatusCode.StatusInvalid);
@@ -181,15 +151,9 @@ class CSSEndpoint : ICSSEndpoint {
         if (user.power < Powers.Mod) 
             return Status(StatusCode.StatusDenied);
 
-        // Make sure the CSS exists
-        if (DATABASE["speedrun.css"].count(["_id": _gameId]) > 0) {
-            // Approve CSS
-            CSS css = getCSS(_gameId);
-            css.approvedCSS = css.css;
-
-            DATABASE["speedrun.css"].update(["id": _gameId], css);
-            return Status(StatusCode.StatusOK);
-        }
+        CSS css = CSS.get(_gameId);
+        if (css is null) return Status(StatusCode.StatusNotFound);
+        css.approve();
 
         return Status(StatusCode.StatusInvalid);
     }
@@ -200,7 +164,7 @@ class CSSEndpoint : ICSSEndpoint {
             return Status(StatusCode.StatusDenied);
         
         // Make sure the game exists
-        if (getGame(_gameId) is null) return Status(StatusCode.StatusInvalid);
+        if (Game.get(_gameId) is null) return Status(StatusCode.StatusInvalid);
 
         // Make sure the user has the permissions to accept the CSS
         if (!User.getValid(SESSIONS[token].user)) return Status(StatusCode.StatusInvalid);
@@ -208,17 +172,9 @@ class CSSEndpoint : ICSSEndpoint {
         if (user.power < Powers.Mod) 
             return Status(StatusCode.StatusDenied);
 
-        // Make sure the CSS exists
-        if (DATABASE["speedrun.css"].count(["_id": _gameId]) > 0) {
-            // Approve CSS
-            CSS css = getCSS(_gameId);
-            css.css = "";
-
-            // TODO: notify admins that the CSS was denied, and why.
-
-            DATABASE["speedrun.css"].update(["id": _gameId], css);
-            return Status(StatusCode.StatusOK);
-        }
+        CSS css = CSS.get(_gameId);
+        if (css is null) return Status(StatusCode.StatusNotFound);
+        css.deny();
 
         return Status(StatusCode.StatusInvalid);
     }
@@ -229,24 +185,15 @@ class CSSEndpoint : ICSSEndpoint {
             return Status(StatusCode.StatusDenied);
         
         // Make sure the game exists
-        if (getGame(_gameId) is null) return Status(StatusCode.StatusInvalid);
+        if (Game.get(_gameId) is null) return Status(StatusCode.StatusInvalid);
 
         // Make sure the user has the permissions to accept the CSS
         User user = User.get(SESSIONS[token].user);
         if (user.power < Powers.Mod) 
             return Status(StatusCode.StatusDenied);
 
-        // Make sure the CSS exists
-        if (DATABASE["speedrun.css"].count(["_id": _gameId]) > 0) {
-            // Approve CSS
-            CSS css = getCSS(_gameId);
-            css.css = "";
-            css.approvedCSS = "";
-
-            DATABASE["speedrun.css"].update(["id": _gameId], css);
-            return Status(StatusCode.StatusOK);
-        }
+        CSS.wipe(_gameId);
 
         return Status(StatusCode.StatusInvalid);
     }
-}*/
+}

@@ -1,9 +1,9 @@
 module backend.game;
 import db;
+import vibe.data.serialization;
 import vibe.db.mongo.collection : QueryFlags;
 import vibe.db.mongo.cursor : MongoCursor;
 import std.algorithm.searching : canFind;
-import vibe.data.serialization;
 
 @trusted
 class Game {
@@ -121,13 +121,6 @@ class Game {
     }
 
     /++
-        Update the game instance in the DB
-    +/
-    void update() {
-        DATABASE["speedrun.games"].update(["_id": id], this);
-    }
-
-    /++
         Accept game
     +/
     void accept() {
@@ -141,6 +134,13 @@ class Game {
     void revoke() {
         approved = false;
         update();
+    }
+
+    /++
+        Update the game instance in the DB
+    +/
+    void update() {
+        DATABASE["speedrun.games"].update(["_id": id], this);
     }
 
     /++

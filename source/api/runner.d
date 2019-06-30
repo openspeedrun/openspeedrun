@@ -15,26 +15,6 @@
 +/
 module api.runner;
 import vibe.web.rest;
-import vibe.data.serialization;
-import db;
 import session;
 import api.common;
 import api.user;
-
-struct Runner {
-    /++
-        The user the runner object is attached to
-    +/
-    @name("_id")
-    string user;
-
-    /++
-        country code for the country of origin
-    +/
-    string country;
-
-    /++
-        Account flavourtext
-    +/
-    string flavourText;
-}

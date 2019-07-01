@@ -46,6 +46,11 @@ class Game {
     bool approved;
 
     /++
+        Wether ingame time should be displayed.
+    +/
+    bool hasIngameTimer;
+
+    /++
         Name of the game
     +/
     @name("name")

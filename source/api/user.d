@@ -16,6 +16,7 @@
 module api.user;
 import api.common;
 import vibe.web.rest;
+import vibe.http.common;
 import backend.user;
 import vibe.data.serialization;
 import session;

@@ -18,7 +18,22 @@ import db;
 import vibe.data.serialization;
 
 class CategoryGroup {
+
+    /++
+        Gets ILCategory
+    +/
+    static CategoryGroup get(string id) {
+        return DATABASE["speedrun.catgroup"].findOne!CategoryGroup(["_id": id]);
+    }
     
+    
+    /++
+        Returns true if a category group exists.
+    +/
+    static bool exists(string group) {
+        return DATABASE["speedrun.catgroup"].count(["_id": group]) > 0;
+    }
+
     /++
         ID of the category
     +/
@@ -41,6 +56,19 @@ class CategoryGroup {
     Category for Full Game runs
 +/
 class Category {
+    /++
+        Gets Category
+    +/
+    static Category get(string id) {
+        return DATABASE["speedrun.categories"].findOne!Category(["_id": id]);
+    }
+
+    /++
+        Returns true if a category exists.
+    +/
+    static bool exists(string cat) {
+        return DATABASE["speedrun.categories"].count(["_id": cat]) > 0;
+    }
     
     /++
         ID of the category
@@ -68,8 +96,11 @@ class Category {
 
     this() { }
 
-    this(string id, string gameId, string displayName) {
-        this.id = id;
+    this(string gameId, string displayName) {
+
+        // Generate a unique ID, while ensuring uniqueness
+        do { this.id = generateID(16); } while(Category.exists(this.id));
+
         this.gameId = gameId;
         this.displayName = displayName;
         DATABASE["speedrun.categories"].insert(this);
@@ -84,7 +115,21 @@ class Category {
     Category for Individual Level runs
 +/
 class ILCategory {
+
+    /++
+        Gets ILCategory
+    +/
+    static ILCategory get(string id) {
+        return DATABASE["speedrun.ilcategories"].findOne!ILCategory(["_id": id]);
+    }
     
+    /++
+        Returns true if an IL category exists.
+    +/
+    static bool exists(string cat) {
+        return DATABASE["speedrun.ilcategories"].count(["_id": cat]) > 0;
+    }
+
     /++
         ID of the category
     +/
@@ -111,8 +156,11 @@ class ILCategory {
 
     this() { }
 
-    this(string id, string gameId, string displayName) {
-        this.id = id;
+    this(string gameId, string displayName) {
+
+        // Generate a unique ID, while ensuring uniqueness
+        do { this.id = generateID(16); } while(ILCategory.exists(this.id));
+
         this.gameId = gameId;
         this.displayName = displayName;
         DATABASE["speedrun.ilcategories"].insert(this);
@@ -127,7 +175,21 @@ class ILCategory {
     A level is a IL-Category sub-object being the frontend for a single IL run
 +/
 class Level {
+
+    /++
+        Gets Level
+    +/
+    static Level get(string id) {
+        return DATABASE["speedrun.levels"].findOne!Level(["_id": id]);
+    }
     
+    /++
+        Returns true if a level exists.
+    +/
+    static bool exists(string lvl) {
+        return DATABASE["speedrun.levels"].count(["_id": lvl]) > 0;
+    }
+
     /++
         ID of the category
     +/
@@ -153,8 +215,11 @@ class Level {
 
     this() { }
 
-    this(string id, string gameId, string ilCategoryId, string displayName) {
-        this.id = id;
+    this(string gameId, string ilCategoryId, string displayName) {
+
+        // Generate a unique ID, while ensuring uniqueness
+        do { this.id = generateID(16); } while(Level.exists(this.id));
+
         this.gameId = gameId;
         this.ilCategoryId = ilCategoryId;
         this.displayName = displayName;

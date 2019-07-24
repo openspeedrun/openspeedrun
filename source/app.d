@@ -16,6 +16,7 @@
 import std.stdio;
 import vibe.d;
 import api;
+import frontend;
 import session;
 
 void main()
@@ -28,6 +29,15 @@ void main()
     router.registerRestInterface!IAuthenticationEndpoint(new AuthenticationEndpoint(), "/api/v1");
     router.registerRestInterface!IUserEndpoint(new UserEndpoint(), "/api/v1");
     
+
+    // Frontend
+    router.registerWebInterface!HomeFE(new HomeFE);
+    
+	// Static files
+	auto fsettings = new HTTPFileServerSettings;
+	fsettings.serverPathPrefix = "/static";
+	router.get("/static/*", serveStaticFiles("static/", fsettings));
+
     // TODO: move these to backend impl
     // router.registerRestInterface!ICSSEndpoint(new CSSEndpoint(), "/api/v1");
     // router.registerRestInterface!IGameEndpoint(new GameEndpoint(), "/api/v1");

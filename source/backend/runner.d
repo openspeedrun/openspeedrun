@@ -52,7 +52,7 @@ class Runner {
     Social[] social;
 
     static Runner get(string id) {
-        return DATABASE["speedrun.runners"].findOne!(["_id": id]);
+        return DATABASE["speedrun.runners"].findOne!Runner(["_id": id]);
     }
 
     static Runner getOrCreate(string id) {

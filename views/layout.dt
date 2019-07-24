@@ -3,12 +3,13 @@ doctype html
 html
     head
         // Shared header resources
-        // TODO: Add CSS and shared JS here
+        - css("/static/style.css");
 
         // Head Template Start
         block head
 
     body
-    
+        .header
+
         // Head Template End
         block body

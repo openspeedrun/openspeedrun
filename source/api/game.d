@@ -15,6 +15,7 @@
 +/
 module api.game;
 import vibe.web.rest;
+import vibe.http.common;
 import session;
 import api.common;
 import backend.user;

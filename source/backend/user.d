@@ -1,16 +1,16 @@
 /+
     Copyright © Clipsey 2019
     This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    GNU Affero General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
+    You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 +/
 module backend.user;
@@ -63,9 +63,28 @@ public:
     The power level of a user
 +/
 enum Powers : ushort {
+    /**
+        Has full control over server.
+    */
     Admin =   9001u,
+
+    /**
+        Moderator can kick/ban users and approve/deny css, but cannot change any server settings.
+    */
     Mod =       42u,
+
+    /**
+        Normal user, has normal user powers. 
+    */
     User =       1u,
+    
+    /**
+        User is social banned
+
+        This means that the user cannot post any comments, nor post in the forum or any other social place on the site.
+
+        The user can still upload runs.
+    */
     Banned =      0u
 }
 
@@ -236,7 +255,9 @@ class User {
         Delete the user from the database
     +/
     void deleteUser() {
+        // Delete user and runner attached
         DATABASE["speedrun.users"].remove(["_id": username]);
+        DATABASE["speedrun.runners"].remove(["_id": username]);
         destroy(this);
     }
 

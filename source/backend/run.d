@@ -1,8 +1,38 @@
+/+
+    Copyright © Clipsey 2019
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
++/
 module backend.run;
 import db;
 import vibe.data.serialization;
 import backend.common;
 import std.datetime;
+
+/**
+    The type of a run
+*/
+enum RunType : ubyte {
+    /**
+        An Full-Game Run
+    */
+    FG,
+
+    /**
+        An Individual-Level Run
+    */
+    IL
+}
 
 /++
     A run
@@ -14,6 +44,13 @@ class Run {
     +/
     static Run get(string runId) {
         return DATABASE["speedrun.runs"].findOne!Run(["_id": runId]);
+    }
+    
+    /**
+        Checks wether an ID was taken
+    */
+    static bool has(string id) {
+        return DATABASE["speedrun.runs"].count(["_id": id]) > 0;
     }
 
     /++
@@ -28,11 +65,11 @@ class Run {
     @name("runnerId")
     string runnerId;
 
-    /++
-        ID of the category
-    +/
-    @name("catId")
-    string categoryId;
+    /**
+        The object this run is attached to.
+    */
+    @name("attachedTo")
+    Attachment attachedTo;
 
     /++
         Date and time this run was posted
@@ -70,6 +107,23 @@ class Run {
     +/
     bool verified = false;
 
+    /**
+        Create a new Full-Game Run
+    */
+    this(string userId, string categoryId, ) {
+
+        // Generate a unique ID, while ensuring uniqueness
+        do { this.id = generateID(16); } while(Run.has(this.id));
+
+        // Find a runner attached to a user, if none found create one
+        
+
+        this.userId = userId;
+        this.attachedTo = new Attachment(RunType.FG, categoryId);
+
+
+    }
+
     /++
         Accept a run
     +/
@@ -97,7 +151,7 @@ class Run {
         Update the data in the database
     +/
     void update() {
-        return DATABASE["speedrun.runs"].update(["_id": runId], this);
+        return DATABASE["speedrun.runs"].update(["_id": id], this);
     }
 
     /++

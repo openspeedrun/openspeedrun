@@ -5,3 +5,7 @@ copyright "Copyright © 2019, clipsey"
 license "GPLv3"
 dependency "vibe-d" version="~>0.8.5"
 dependency "secured" version="~>2.0.1"
+
+dependency "vibe-sdlang" version="~>1.0.0-alpha.3"
+
+dependency "sdlang-d" version="~>0.10.5"

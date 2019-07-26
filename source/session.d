@@ -16,6 +16,24 @@
 module session;
 import std.variant;
 import std.datetime;
+import vibe.http.server;
+import std.stdio;
+
+void destroyToken(ref HTTPServerRequest req, ref HTTPServerResponse res) {
+    res.cookies["TOKEN"] = null;
+}
+
+string getToken(ref HTTPServerRequest req, ref HTTPServerResponse res) {
+    return req.cookies.get("TOKEN");
+}
+
+void setToken(HTTPServerResponse res, string token) {
+    Cookie cookie = new Cookie;
+    cookie.setValue(token, Cookie.Encoding.url);
+    cookie.path = "/";
+    cookie.httpOnly = false;
+    res.cookies["TOKEN"] = cookie;
+}
 
 /++
     Memory session store
@@ -128,12 +146,12 @@ public:
         Creates a new session for use with opIndex
     +/
     Session* createSession(Duration lifetime, string username) {
-        import std.base64 : Base64URL;
+        import std.base64 : Base64URLNoPadding;
         import secured.random;
 
         // Create session and return it
         DateTime nowTime = now();
-        string token = Base64URL.encode(random(64));
+        string token = Base64URLNoPadding.encode(random(64));
         Session session;
         session.token = token;
         session.lifetime = lifetime;

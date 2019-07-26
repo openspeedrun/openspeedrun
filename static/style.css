@@ -1,0 +1,79 @@
+:root {
+    --navbar-fg: white;
+    --navbar-bg: #932424;
+    --navbar-bg-sep: #721b1b;
+    --navbtn-bg: #a12626;
+    --navbtn-bg-hover: #c53838;
+    --navbtn-bg-active: #9e2828;
+    --navbar-color-m: #241023;
+
+    --text-color-dark: #04080f;
+    --link-color-dark: #122c34;
+    --link-color-dark-hover: #224870;
+
+    --transition-time: 200ms;
+
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    margin: 0px;
+    font-family: "Ubuntu", Arial, Helvetica, sans-serif;
+}
+
+.navbar {
+    flex: 1;
+    display: inline-flex;
+    background-color: var(--navbar-bg);
+    color: var(--navbar-fg);
+}
+
+.spacer {
+    flex: 2;
+}
+
+.navLogo {
+    margin-right: 16px;
+}
+
+.navItem {
+    height: inherit;
+    flex: 0;
+    flex-direction: row;
+    display: inline-flex;
+}
+
+.navItem img {
+    height: inherit;
+}
+
+.navButton {
+
+    min-width: 128px;
+
+    display: inline-flex;
+    height: inherit;
+    background-color: var(--navbtn-bg);
+    color: var(--navbar-fg);
+
+    align-content: center;
+    text-decoration: none;
+
+    transition-duration: var(--transition-time);
+}
+
+.navButton:hover {
+    background-color: var(--navbtn-bg-hover);
+}
+
+.navButton:active {
+    background-color: var(--navbtn-bg-active);
+    outline: none;
+}
+
+.navButton * {
+    flex: 1;
+    align-self: center;
+    text-align: center;
+}

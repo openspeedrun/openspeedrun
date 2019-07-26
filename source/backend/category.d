@@ -16,8 +16,10 @@
 module backend.category;
 import db;
 import vibe.data.serialization;
+import backend.common;
 
 class CategoryGroup {
+@trusted:
 
     /++
         Gets ILCategory
@@ -56,6 +58,8 @@ class CategoryGroup {
     Category for Full Game runs
 +/
 class Category {
+@trusted:
+
     /++
         Gets Category
     +/
@@ -115,6 +119,7 @@ class Category {
     Category for Individual Level runs
 +/
 class ILCategory {
+@trusted:
 
     /++
         Gets ILCategory
@@ -175,7 +180,7 @@ class ILCategory {
     A level is a IL-Category sub-object being the frontend for a single IL run
 +/
 class Level {
-
+@trusted:
     /++
         Gets Level
     +/
@@ -195,6 +200,13 @@ class Level {
     +/
     @name("_id")
     string id;
+
+    /++
+        What placement the level has in the game
+        (used for ordering levels)
+    +/
+    @name("placement")
+    int placement;
 
     /++
         ID of game this category belongs to

@@ -31,7 +31,8 @@ void main()
     
 
     // Frontend
-    router.registerWebInterface!HomeFE(new HomeFE);
+    router.registerWebInterface(new HomeFE);
+    router.registerWebInterface(new AuthFE);
     
 	// Static files
 	auto fsettings = new HTTPFileServerSettings;

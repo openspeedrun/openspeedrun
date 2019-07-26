@@ -1,15 +1,57 @@
+//
+    Copyright © Clipsey 2019
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+//
+    If you're a developer, check out our github repository!
+    https://github.com/openspeedrun/openspeedrun
 include utils
 doctype html
+- import session;
+- import backend;
+- User user;
+- if (SESSIONS.isValid(token))
+    - user = User.get(SESSIONS[token].user);
+
 html
     head
         // Shared header resources
         - css("/static/style.css");
 
-        // Head Template Start
+        link(rel="shortcut icon", href="/static/favicon.png")
+        link(rel="apple-touch-icon-precomposed", href="/static/favicon.png")
+
+        //- Implement basic head template
         block head
+            title="OpenSpeedRun (BETA)"
 
     body
-        .header
-
-        // Head Template End
-        block body
+        .navbar(style="height: 64px;")
+            a.navItem.navLogo(href="/")
+                img(src="/static/logo.png")
+            a.navButton(href="/games")
+                p="Games"
+            a.navButton(href="/runs")
+                p="Runs"
+            .spacer
+            - if (user is null)
+                a.navButton(href="/auth/login")
+                    p="Log in"
+            - else
+                .navItem
+                    p=user.displayName
+                
+        .content
+            //- Implement basic body template
+            block body

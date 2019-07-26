@@ -1,0 +1,7 @@
+extends layout
+block body
+    - auto games = Game.list();
+    - foreach(game; games)
+        a(href="/games/"~game.id)
+            p=game.gameName
+        p=game.description

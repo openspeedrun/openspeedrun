@@ -9,4 +9,9 @@ class HomeFE {
     public void getHome(string token) {
         render!("home.dt", token);
     }
+
+    @path("/:gameId")
+    public void getGameRedirect(string _gameId) {
+        redirect("/games/"~_gameId);
+    }
 }

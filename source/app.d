@@ -28,11 +28,14 @@ void main()
     URLRouter router = new URLRouter;
     router.registerRestInterface!IAuthenticationEndpoint(new AuthenticationEndpoint(), "/api/v1");
     router.registerRestInterface!IUserEndpoint(new UserEndpoint(), "/api/v1");
-    
+     router.registerRestInterface!ICSSEndpoint(new CSSEndpoint(), "/api/v1");
+    router.registerRestInterface!IGameEndpoint(new GameEndpoint(), "/api/v1");
+   
 
     // Frontend
     router.registerWebInterface(new HomeFE);
     router.registerWebInterface(new AuthFE);
+    router.registerWebInterface(new GamesFE);
     
 	// Static files
 	auto fsettings = new HTTPFileServerSettings;
@@ -40,8 +43,6 @@ void main()
 	router.get("/static/*", serveStaticFiles("static/", fsettings));
 
     // TODO: move these to backend impl
-    // router.registerRestInterface!ICSSEndpoint(new CSSEndpoint(), "/api/v1");
-    // router.registerRestInterface!IGameEndpoint(new GameEndpoint(), "/api/v1");
 
     // Set up frontend routes
     // TODO: make frontend

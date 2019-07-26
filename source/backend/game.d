@@ -16,6 +16,7 @@
 module backend.game;
 import db;
 import vibe.data.serialization;
+import vibe.data.bson;
 import vibe.db.mongo.collection : QueryFlags;
 import vibe.db.mongo.cursor : MongoCursor;
 import std.algorithm.searching : canFind;
@@ -35,6 +36,7 @@ class Game {
         Search for games, returns a cursor looking at the games.
     +/
     static MongoCursor!Game search(string query, int page = 0, int countPerPage = 20) {
+        if (query == "" || query is null) return list(page, countPerPage);
         return DATABASE["speedrun.games"].find!Game(
             [
                 "$or": [
@@ -43,6 +45,14 @@ class Game {
                     ["description": [ "$regex": query ]]
                 ]
             ], 
+            null, 
+            QueryFlags.None, 
+            page*countPerPage, 
+            countPerPage);
+    }
+
+    static MongoCursor!Game list(int page = 0, int countPerPage = 20) {
+        return DATABASE["speedrun.games"].find!Game(Bson.emptyObject, 
             null, 
             QueryFlags.None, 
             page*countPerPage, 

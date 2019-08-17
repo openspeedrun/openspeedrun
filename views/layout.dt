@@ -25,9 +25,12 @@ doctype html
     - user = User.get(SESSIONS[token].user);
 
 html
+    block init
     head
         // Shared header resources
         - css("/static/style.css");
+
+        meta(name="viewport", content="width=device-width, initial-scale=1.0")
 
         link(rel="shortcut icon", href="/static/favicon.png")
         link(rel="apple-touch-icon-precomposed", href="/static/favicon.png")
@@ -50,8 +53,14 @@ html
                     p="Log in"
             - else
                 .navItem
-                    p=user.displayName
+                    p="Welcome " ~ user.displayName
                 
         .content
-            //- Implement basic body template
-            block body
+            .contentBodyLeft
+                block lbody
+
+            .contentBody
+                block body
+            
+            .contentBodyRight
+                block rbody

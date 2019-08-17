@@ -1,7 +1,15 @@
 extends layout
 block body
-    - auto games = Game.list();
-    - foreach(game; games)
-        a(href="/games/"~game.id)
-            p=game.gameName
-        p=game.description
+    - void addGame(Game game)
+        .game
+            a(href="/games/"~game.id)
+                .gameblock
+                    h2=game.gameName
+
+    - auto games = Game.search(searchTerm, 0, 20, showUnapproved);
+    .widget
+        .widget-title
+            h2="Games"
+        
+        - foreach(game; games)
+            - addGame(game);

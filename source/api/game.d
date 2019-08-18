@@ -94,7 +94,7 @@ class GameEndpoint : IGameEndpoint {
 
     StatusT!(Game[]) search(string query, int _page = 0, int pgCount = 20, bool showPending = false) {
         Game[] games;
-        foreach(game; Game.search(query, _page, pgCount)) {
+        foreach(game; Game.search(query, _page, pgCount).result) {
             if (!showPending && !game.approved) continue;
             games ~= game;
         }

@@ -15,11 +15,17 @@
 +/
 module backend.game;
 import db;
+import backend.user;
 import vibe.data.serialization;
 import vibe.data.bson;
 import vibe.db.mongo.collection : QueryFlags;
 import vibe.db.mongo.cursor : MongoCursor;
 import std.algorithm.searching : canFind;
+
+struct SearchResult {
+    ulong resultsCount;
+    MongoCursor!Game result;
+}
 
 @trusted
 class Game {
@@ -37,13 +43,12 @@ public:
     /++
         Search for games, returns a cursor looking at the games.
     +/
-    static MongoCursor!Game search(string queryString, int page = 0, int countPerPage = 20, bool showUnapproved = false) {
+    static SearchResult search(string queryString, int page = 0, int countPerPage = 20, bool showUnapproved = false) {
         if (queryString == "" || queryString is null) return list(page, countPerPage);
 
         import query : bson;
 
-        return DATABASE["speedrun.games"].find!Game(
-            bson([
+        auto inquery = bson([
                 "$and": bson([
                     bson(["$or": 
                         bson([
@@ -54,23 +59,37 @@ public:
                     ])]),
                     bson(["approved": bson(showUnapproved)])
                 ])
-            ]), 
-            null, 
-            QueryFlags.None, 
-            page*countPerPage, 
-            countPerPage);
+            ]);
+
+        return SearchResult(
+            DATABASE["speedrun.games"].count(inquery), 
+            DATABASE["speedrun.games"].find!Game(
+                inquery, 
+                null, 
+                QueryFlags.None, 
+                page*countPerPage, 
+                countPerPage
+            )
+        );
     }
 
-    static MongoCursor!Game list(int page = 0, int countPerPage = 20, bool showUnapproved = false) {
+    static SearchResult list(int page = 0, int countPerPage = 20, bool showUnapproved = false) {
         import query : bson;
-        return DATABASE["speedrun.games"].find!Game(
-            (!showUnapproved) ? bson([
-                "approved": bson(true)
-            ]) : Bson.emptyObject,
-            null, 
-            QueryFlags.None, 
-            page*countPerPage, 
-            countPerPage);
+        import std.stdio : writeln;
+        Bson inquery = (!showUnapproved) ? 
+            bson(["approved": bson(true)]) : 
+            Bson.emptyObject;
+
+        return SearchResult(
+            DATABASE["speedrun.games"].count(inquery),
+            DATABASE["speedrun.games"].find!Game(
+                inquery, 
+                null, 
+                QueryFlags.None, 
+                page*countPerPage, 
+                countPerPage
+            )
+        );    
     }
 
     /++
@@ -120,17 +139,18 @@ public:
     /++
         FullGame Categories
     +/
-    string[] fgCategories;
-
-    /++
-        Individual Level Categories
-    +/
-    string[] ilCategories;
+    string[] categories;
 
     /++
         Levels
     +/
     string[] levels;
+
+    /++
+        The ID of the game series this game belongs to
+    +/
+    @optional
+    string gameSeries;
 
     this() {}
 
@@ -144,10 +164,21 @@ public:
     }
 
     /++
+        Returns true if the user with the specified id is a server-wide admin
+
+        == NOTE ==
+        Such admins needs to be vetted thoroughly as they have access to modify the state of the entire server.
+    +/
+    bool isServerAdmin(string userId) {
+        User user = User.get(userId);
+        return user !is null && user.power >= Powers.Admin;
+    }
+
+    /++
         Returns true if the user with specified id is the owner of the server
     +/
     bool isOwner(string userId) {
-        return owner == userId;
+        return owner == userId || isServerAdmin(userId);
     }
 
     /++

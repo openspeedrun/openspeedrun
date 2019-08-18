@@ -17,8 +17,27 @@ module db;
 import vibe.db.mongo.client;
 public import vibe.db.mongo.database;
 import vibe.db.mongo.mongo;
+import std.traits;
+import config;
 
 __gshared Database DATABASE;
+
+/++
+    The size limit of a string
++/
+struct limit {
+    /// The limit value
+    int size;
+}
+
+/**
+    verifies that the limit of a string value is acceptable
+*/
+bool verifyLimit(alias item)(string itemStr) {
+    static assert(hasUDA!(item, limit), "No limit UDA set!");
+    limit lmt = getUDAs!(item, limit)[0];
+    return itemStr.length < lmt.size;
+}
 
 class Database {
 private:
@@ -35,5 +54,5 @@ public:
 }
 
 shared static this() {
-    DATABASE = new Database("mongodb://127.0.0.1");
+    DATABASE = new Database(CONFIG.dbConnectionString);
 }

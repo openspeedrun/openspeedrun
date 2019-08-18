@@ -1,0 +1,56 @@
+extends layout
+block body
+    - import config;
+    .widget
+        .widget-title
+            h2="Register"
+            
+        center
+            form(action="/auth/register", method="post")
+                input(type="text", name="username", placeholder="User Name", value=username)
+
+                - if (tag == "usernameInvalid")
+                    br
+                    .widget
+                        p.error="User name is already taken!"
+
+                br
+                input(type="text", name="email", placeholder="Email", value=email)
+                br
+
+                - if (tag == "emailInvalid")
+                    .widget
+                        p.error=errorMsg
+
+                - if (tag == "takenError")
+                    .widget
+                        p.error=errorMsg
+
+                input(type="password", name="password", placeholder="Password")
+                br
+                input(type="password", name="passwordverify", placeholder="Verify Password")
+
+
+                - if (tag == "pwNoMatch")
+                    br
+                    .widget
+                        p.error="Passwords do not match!"
+
+                - if (tag == "pwTooSmall")
+                    br
+                    .widget
+                        p.error="Password must be a least %d characters long.".format(CONFIG.auth.minPasswordLength)
+
+                - if (tag == "pwTooLarge")
+                    br
+                    .widget
+                        p.error="Password must not be longer than %d characters.".format(CONFIG.auth.maxPasswordLength)
+
+
+                input(type="submit", value="Register")
+
+        .widget-title
+            h3="Already have an account?"
+        a(href="/auth/login")
+            center
+                button="Log in"

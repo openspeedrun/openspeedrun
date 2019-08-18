@@ -1,37 +1,65 @@
 :root {
     --navbar-fg: white;
-    --navbar-bg: #932424;
+    --navbar-bg: #702a2a;
     --navbar-bg-sep: #721b1b;
-    --navbtn-bg: #a12626;
-    --navbtn-bg-hover: #c53838;
-    --navbtn-bg-active: #9e2828;
+    --navbtn-bg: #9b3838;
+    --navbtn-bg-hover: #b85757;
+    --navbtn-bg-active: #a74444;
     --navbar-color-m: #241023;
+
+    --pg-error: #d64545;
+    --pg-warn: #dad04e;
+    --pg-success: #3ece3e;
+    --pg-info: white;
 
     --text-color-dark: #04080f;
     --link-color-dark: #122c34;
     --link-color-dark-hover: #224870;
 
-    --transition-time: 200ms;
-
     --pg-dark-bg: #201e1e;
     --pg-dark-fg: white;
 
-    --pg-dark-link: rgb(187, 57, 57);
-    --pg-dark-link-active: rgb(179, 83, 83);
+    --pg-dark-link: #bb3939;
+    --pg-dark-link-active: #b35353;
 
-    --pg-dark-table-bg: rgb(59, 45, 45);
+    --pg-dark-table-bg: #3b2d2d;
     --pg-dark-table-bg2: #2c2121;
     --pg-dark-table-bg-active: #523737;
     --pg-dark-table-bg-header: #6e3939;
 
-    --pg-dark-widget: rgb(59, 45, 45);
-    --pg-dark-widget-title: rgb(83, 74, 74);
+    --pg-dark-widget: #3b2d2d;
+    --pg-dark-widget-title: #534a4a;
 
     --pg-dark-btn: #6e3939;
     --pg-dark-btn-hover: #723535;
     --pg-dark-btn-active: #523737;
 
-    transition-duration: 200ms;
+    --pg-dark-lbl: #523737;
+    --pg-dark-lbl-accent: #613838;
+    --pg-dark-lbl-active: #964949;
+
+
+    --transition-time: 200ms;
+}
+
+.error {
+    color: var(--pg-error);
+    text-shadow: 0px 0px 12px var(--pg-error);
+}
+
+.warning {
+    color: var(--pg-warn);
+    text-shadow: 0px 0px 12px var(--pg-warn);
+}
+
+.success {
+    color: var(--pg-success);
+    text-shadow: 0px 0px 12px var(--pg-success);
+}
+
+.info {
+    color: var(--pg-info);
+    text-shadow: 0px 0px 12px var(--pg-info);
 }
 
 /* Responsive design stuff */
@@ -48,15 +76,24 @@ body {
     font-family: "Ubuntu", Arial, Helvetica, sans-serif;
     background-color: var(--pg-dark-bg);
     color: var(--pg-dark-fg);
+    transition-duration: var(--transition-time);
+}
+
+input {
+    margin-bottom: 4px;
+    margin-right: 4px;
 }
 
 a {
     text-decoration: none;
     color: var(--pg-dark-link);
+    text-shadow: 0px 0px 12px var(--pg-dark-link);
+    transition-duration: var(--transition-time);
 }
 
 a:active {
     color: var(--pg-dark-link-active);
+    text-shadow: 0px 0px 12px var(--pg-dark-active);
 }
 
 .navbar {
@@ -222,18 +259,33 @@ tr:nth-child(1) {
     background-color: var(--pg-dark-table-bg-header) !important;
 }
 
-button {
+button, input[type="submit"] {
     display: block;
     padding: 12px !important;
     color: var(--pg-dark-fg);
     background-color: var(--pg-dark-btn);
     border: none;
+    transition-duration: var(--transition-time);
 }
 
-button:hover {
+button:hover, input[type="submit"]:hover {
     background-color: var(--pg-dark-btn-hover);
 }
 
-button:active {
+button:active, input[type="submit"]:active {
     background-color: var(--pg-dark-btn-active);
+}
+
+input[type="text"], input[type="password"] {
+    background-color: var(--pg-dark-lbl);
+    border-style: none;
+    padding: 8px;
+    color: var(--pg-dark-fg);
+    border-bottom: 4px solid var(--pg-dark-lbl-accent);
+
+    transition-duration: var(--transition-time);
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+    border-bottom: 4px solid var(--pg-dark-lbl-active);
 }

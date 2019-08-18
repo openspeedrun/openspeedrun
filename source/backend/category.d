@@ -139,6 +139,10 @@ class Category {
         DATABASE["speedrun.categories"].insert(this);
     }
 
+    void update() {
+        DATABASE["speedrun.categories"].update(["_id": id], this);
+    }
+
     void remove() {
         DATABASE["speedrun.categories"].remove(["_id": id]);
     }

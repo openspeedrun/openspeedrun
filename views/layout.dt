@@ -20,6 +20,7 @@ include utils
 doctype html
 - import session;
 - import backend;
+- import std.format;
 - User user;
 - if (SESSIONS.isValid(token))
     - user = User.get(SESSIONS[token].user);

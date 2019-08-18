@@ -14,6 +14,178 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 +/
 module config;
+import vibe.mail.smtp;
+import vibe.data.sdl;
+import vibe.data.serialization;
+
+
+/++
+    Loads a config file from a system config path
+    On POSIX:
+        /etc/osr/(file).sdl
+        ./(file).sdl
+    
+    On Windows:
+        .\(file).sdl
++/
+T loadConfigSDLFile(T)(string configName, bool optional = false) {
+    import std.file : exists;
+    import std.path : buildPath;
+    import sdlang.parser : parseFile;
+
+    string withExt = (configName~".sdl");
+
+    version(Posix) {
+        // If local path version exists, use that
+        if (withExt.exists) return deserializeSDLang!T(parseFile(withExt));
+        
+        // Get systemwide path
+        string systemwide = buildPath("/etc/osr", withExt);
+
+        // Try using the system wide version
+        if (systemwide.exists) return deserializeSDLang!T(parseFile(systemwide));
+
+        // Throw error if everything fails miserably & this config file not being optional.
+        if (!optional) throw new Exception("Could not find configuration file!");
+    } else version (Windows) {
+
+        // If local path version exists, use that
+        if (withExt.exists) return deserializeSDLang!T(parseFile(withExt));
+
+        // Throw error if everything fails miserably & this config file not being optional.
+        if (!optional) throw new Exception("Could not find configuration file!");
+    } else {
+        static assert(0, "This operating system is not supported!");
+    }
+
+    // Return default state of config
+    return T.init;
+}
+
+/// The configuration of the server
+__gshared ServerConfig CONFIG;
+
+/++
+    Server authentication options
++/
+struct ServerAuthConfig {
+@trusted:
+    /// Wether the server allows people to sign up
+    @optional
+    bool allowSignups = true;
+
+    /// Wether the server should provide OTP 2FA, this is by default enabled
+    @optional
+    bool enable2FA = true;
+
+    /// Wether accounts need to be verified by email
+    @optional
+    bool emailVerification = true;
+
+    @optional
+    uint maxEmailLength = 72;
+
+    @optional
+    uint minUsernameLength = 3;
+
+    @optional
+    uint maxUsernameLength = 72;
+
+    @optional
+    uint minPasswordLength = 8;
+
+    @optional
+    uint maxPasswordLength = 64;
+}
+
+/++
+    Relevant SMTP settings
++/
+struct ServerEmailSettings {
+@trusted:
+
+    /// The client username
+    string username;
+
+    /// The client password
+    string password;
+    
+    /// The IP/DNS name of the server the SMTP server is on
+    @optional
+    string host = "localhost";
+    
+    /// The port the SMTP server is on
+    @optional
+    ushort port = 25;
+
+    /// The email address to show as sender
+    @optional
+    string originEmail;
+
+    /++
+        Converts this instance of ServerEmailSettings to an instance of SMTPClientSettings
+
+        == Notes ==
+        TLS is *required*
+        Authentication type is *login*
+    +/
+    SMTPClientSettings toClientSettings() {
+        SMTPClientSettings settings = new SMTPClientSettings;
+        settings.authType = SMTPAuthType.login;
+        settings.connectionType = SMTPConnectionType.tls;
+        settings.host = host;
+        settings.port = port;
+        settings.username = username;
+        settings.password = password;
+        return settings;
+    }
+
+    string getAddress() {
+        import std.format : format;
+
+        // If a origin email is set, return the origin email
+        if (originEmail != null && originEmail != "") return originEmail;
+
+        // Otherwise, build an origin email out of the username and host
+        return "%s@%s".format(username, host);
+    }
+}
+
+/++
+    Struct containing the server configuration
++/
+struct ServerConfig {
+@trusted:
+    /++
+        Settings for the email server
+    +/
+    ServerEmailSettings smtp;
+
+    /++
+        Server authentication settings
+        By default all authentication is enabled
+    +/
+    @optional
+    ServerAuthConfig auth;
+
+    /++
+        Wether the REST API should be enabled
+    +/
+    @optional
+    bool enableREST = true;
+
+    /++
+        The address to bind the server to
+    +/
+    @optional
+    string bindAddress = "127.0.0.1:8080";
+
+    /++
+        Connection String for the MongoDB database
+    +/
+    @optional
+    string dbConnectionString = "mongodb://127.0.0.1";
+}
 
 /++
     CHANGE THESE TO CHANGE PASSWORD SECURITY

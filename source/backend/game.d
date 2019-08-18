@@ -22,9 +22,52 @@ import vibe.db.mongo.collection : QueryFlags;
 import vibe.db.mongo.cursor : MongoCursor;
 import std.algorithm.searching : canFind;
 
+/++
+    The result of a game search
++/
 struct SearchResult {
+    /++
+        How many results were found in total on the server
+    +/
     ulong resultsCount;
+
+    /++
+        The mongo cursor over the results
+    +/
     MongoCursor!Game result;
+}
+
+/++
+    Info about the game
++/
+struct GameInfo {
+    /++
+        Link to image of game's box art
+    +/
+    string boxart;
+
+    /++
+        Short description of the game
+
+        128 characters max.
+    +/
+    @limit(128)
+    string shortDescription;
+
+    /++
+        The year of release
+    +/
+    ushort releaseYear;
+
+    /++
+        Where to buy the game
+    +/
+    string[] buyLinks;
+
+    /++
+        Official game community pages (discord, etc.)
+    +/
+    string[] communityPages;
 }
 
 @trusted
@@ -151,6 +194,12 @@ public:
     +/
     @optional
     string gameSeries;
+
+    /++
+        Where to buy the game
+    +/
+    @optional
+    string storePage;
 
     this() {}
 

@@ -24,6 +24,8 @@ import crypt;
 import std.range;
 import std.algorithm;
 import backend.common;
+import backend.registrations;
+import config;
 
 /++
     User authentication info
@@ -138,13 +140,25 @@ class User {
 @trusted public:
 
     static User register(string username, string email, string password) {
-        if (nameTaken(username)) throw new TakenException("name");
-        if (emailTaken(email)) throw new TakenException("email");
+        if (nameTaken(username)) throw new TakenException("User name");
+        if (emailTaken(email)) throw new TakenException("Email");
         
         string properUsername = formatId(username);
         if (properUsername == "") throw new InvalidFmtException("username", ExpectedIDFmt);
 
-        DATABASE["speedrun.users"].insert(new User(properUsername, email, UserAuth(password)));
+        // Setup user
+        User userToAdd = new User(properUsername, email, UserAuth(password));
+
+        // If email verification is turned off, mark the user as verified already
+        // NOTE: Maybe this shouldn't be done in the future and instead there should be general checks for this feature where needed
+        if (!CONFIG.auth.emailVerification) userToAdd.verified = true;
+        
+
+        DATABASE["speedrun.users"].insert(userToAdd);
+
+        // If email verification is turned on, queue the user for email verification
+        if (CONFIG.auth.emailVerification) Registration.queueUser(username);
+        
         return User.get(username);
     }
 
@@ -156,12 +170,17 @@ class User {
     }
 
     /++
-        Gets user from database
+        Gets user from database via either username or email
 
         returns null if no user was found
     +/
     static User get(string username) {
-        return DATABASE["speedrun.users"].findOne!User(["_id": username]);
+        return DATABASE["speedrun.users"].findOne!User([
+            "$or": [
+                ["_id": username], 
+                ["email": username]
+            ]
+        ]);
     }
 
     /++

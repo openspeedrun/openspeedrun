@@ -18,37 +18,49 @@ import vibe.d;
 import api;
 import frontend;
 import session;
+import config;
+import backend.mail;
 
 void main()
 {
+    URLRouter router = new URLRouter;
+
     // Create a new session manager
+    logInfo("Warming up session manager...");
     SESSIONS = new SessionManagerImpl();
 
+    logInfo("Loading configuration...");
+    CONFIG = loadConfigSDLFile!ServerConfig("osrconfig", true);
+
+    logInfo("Setting up email service...");
+    EMAILER = new MailService(CONFIG.smtp.toClientSettings(), CONFIG.smtp.getAddress());
+
     // Set up API routes
-    URLRouter router = new URLRouter;
-    router.registerRestInterface!IAuthenticationEndpoint(new AuthenticationEndpoint(), "/api/v1");
-    router.registerRestInterface!IUserEndpoint(new UserEndpoint(), "/api/v1");
-    router.registerRestInterface!ICSSEndpoint(new CSSEndpoint(), "/api/v1");
-    router.registerRestInterface!IGameEndpoint(new GameEndpoint(), "/api/v1");
+    if (CONFIG.enableREST) {
+        logInfo("Binding REST API...");
+        router.registerRestInterface!IAuthenticationEndpoint(new AuthenticationEndpoint(), "/api/v1");
+        router.registerRestInterface!IUserEndpoint(new UserEndpoint(), "/api/v1");
+        router.registerRestInterface!ICSSEndpoint(new CSSEndpoint(), "/api/v1");
+        router.registerRestInterface!IGameEndpoint(new GameEndpoint(), "/api/v1");
+    }
    
 
     // Frontend
+    logInfo("Binding frontend...");
     router.registerWebInterface(new CSSFE);
     router.registerWebInterface(new AuthFE);
     router.registerWebInterface(new GamesFE);
     router.registerWebInterface(new HomeFE);
     
 	// Static files
+    logInfo("Binding static file server...");
 	auto fsettings = new HTTPFileServerSettings;
 	fsettings.serverPathPrefix = "/static";
 	router.get("/static/*", serveStaticFiles("static/", fsettings));
 
-    // TODO: move these to backend impl
-
-    // Set up frontend routes
-    // TODO: make frontend
-
     // Launch server.
-    listenHTTP("127.0.0.1:8080", router);
+    logInfo("Launching server...");
+    listenHTTP(CONFIG.bindAddress, router);
+    logInfo("Server started on %s!...", CONFIG.bindAddress);
     runApplication();
 }

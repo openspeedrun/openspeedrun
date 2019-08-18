@@ -49,6 +49,12 @@ block lbody
             .widget-title
                 h3="Rules"
             p="No rules has been set for this category..."
+
+        .widget
+            .widget-title
+                h3="Community Resources"
+            p="No resources have been attached to this game..."
+        
 block rbody
     - if (game !is null)
         - if (user !is null && game.isMod(user.username))

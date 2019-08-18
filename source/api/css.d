@@ -102,6 +102,7 @@ class CSSEndpoint : ICSSEndpoint {
 
         // Get CSS and return string with CSS data.
         CSS css = CSS.get(_gameId);
+        if (css is null) return "/* No custom CSS set! */";
         return showPending ? css.css : css.approvedCSS;
     }
 

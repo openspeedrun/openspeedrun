@@ -19,6 +19,19 @@
     --pg-dark-link: rgb(187, 57, 57);
     --pg-dark-link-active: rgb(179, 83, 83);
 
+    --pg-dark-table-bg: rgb(59, 45, 45);
+    --pg-dark-table-bg2: #2c2121;
+    --pg-dark-table-bg-active: #523737;
+    --pg-dark-table-bg-header: #6e3939;
+
+    --pg-dark-widget: rgb(59, 45, 45);
+    --pg-dark-widget-title: rgb(83, 74, 74);
+
+    --pg-dark-btn: #6e3939;
+    --pg-dark-btn-hover: #723535;
+    --pg-dark-btn-active: #523737;
+
+    transition-duration: 200ms;
 }
 
 /* Responsive design stuff */
@@ -69,6 +82,13 @@ a:active {
     flex: 0;
     flex-direction: row;
     display: inline-flex;
+    align-items: center;
+}
+
+.navItem > * {
+    flex: 1;
+    padding-left: 16px;
+    padding-right: 16px;
 }
 
 .navItem img {
@@ -128,15 +148,16 @@ a:active {
 }
 
 .widget {
-    box-shadow: 0px 0px 62px 7px rgb(59, 45, 45);
+    box-shadow: 0px 0px 62px 7px var(--pg-dark-widget);
     display: block;
     width: 100%;
-    background-color: rgb(59, 45, 45);
+    background-color: var(--pg-dark-widget);
     overflow: hidden;
+    margin-bottom: 16px;
 }
 
 .widget-title {
-    background-color: rgb(83, 74, 74);
+    background-color: var(--pg-dark-widget-title);
     min-height: 32px;
     width: 100%;
     display: inline-flex;
@@ -145,12 +166,74 @@ a:active {
 
 .widget-title * {
     flex: 1;
+    padding: 8px;
 }
 
-.widget>* {
-    padding: 8px;
+.widget>*:not(.widget-title) {
+    margin: 8px;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
 h1 { margin: 0px; }
 h2 { margin: 0px; }
 h3 { margin: 0px; }
+
+.widget-table {
+    margin: auto;
+}
+
+.widget-table > table {
+    width: 100%;
+}
+
+table {
+    border: none;
+    border-spacing: 0px;
+    table-layout: fixed;
+}
+
+td {
+    text-align: center;
+}
+
+th, td {
+    padding: 6px;
+    border-bottom: 1px solid var(--pg-dark-table-bg-active);
+}
+
+tr {
+    border: none;
+}
+
+tr:nth-child(n+2):hover {
+    background-color: var(--pg-dark-table-bg-active) !important;
+}
+
+tr:nth-child(odd) {
+    background-color: var(--pg-dark-table-bg);
+}
+
+tr:nth-child(even) {
+    background-color: var(--pg-dark-table-bg2);
+}
+
+tr:nth-child(1) {
+    background-color: var(--pg-dark-table-bg-header) !important;
+}
+
+button {
+    display: block;
+    padding: 12px !important;
+    color: var(--pg-dark-fg);
+    background-color: var(--pg-dark-btn);
+    border: none;
+}
+
+button:hover {
+    background-color: var(--pg-dark-btn-hover);
+}
+
+button:active {
+    background-color: var(--pg-dark-btn-active);
+}

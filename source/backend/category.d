@@ -21,6 +21,10 @@ import backend.common;
 class CategoryGroup {
 @trusted:
 
+    static MongoCursor!CategoryGroup getList(string gameId) {
+        return DATABASE["speedrun.catgroup"].find!CategoryGroup(["gameId": gameId]);
+    }
+
     /++
         Gets ILCategory
     +/
@@ -51,6 +55,7 @@ class CategoryGroup {
     /++
         Display name of category group
     +/
+    @name("displayName")
     string displayName;
 }
 
@@ -59,6 +64,9 @@ class CategoryGroup {
 +/
 class Category {
 @trusted:
+    static MongoCursor!Category getList(string gameId, string group="") {
+        return DATABASE["speedrun.categories"].find!Category(["gameId": gameId, "groupId": group]);
+    }
 
     /++
         Gets Category
@@ -81,6 +89,13 @@ class Category {
     string id;
 
     /++
+        ID of the category group this belongs to.
+        groupId is "" if its in the root of the game
+    +/
+    @name("groupId")
+    string groupId = "";
+
+    /++
         ID of game this category belongs to
     +/
     @name("gameId")
@@ -98,81 +113,34 @@ class Category {
     @name("description")
     string description;
 
+    /++
+        The rules of this category
+    +/
+    @name("rules")
+    string rules;
+
+    /++
+        Wether this category is an IL category
+    +/
+    @name("isIL")
+    bool individualLevel;
+
     this() { }
 
-    this(string gameId, string displayName) {
+    this(string gameId, string displayName, bool il, string group="") {
 
         // Generate a unique ID, while ensuring uniqueness
         do { this.id = generateID(16); } while(Category.exists(this.id));
 
         this.gameId = gameId;
         this.displayName = displayName;
+        this.groupId = group;
+        this.individualLevel = il;
         DATABASE["speedrun.categories"].insert(this);
     }
 
     void remove() {
         DATABASE["speedrun.categories"].remove(["_id": id]);
-    }
-}
-
-/++
-    Category for Individual Level runs
-+/
-class ILCategory {
-@trusted:
-
-    /++
-        Gets ILCategory
-    +/
-    static ILCategory get(string id) {
-        return DATABASE["speedrun.ilcategories"].findOne!ILCategory(["_id": id]);
-    }
-    
-    /++
-        Returns true if an IL category exists.
-    +/
-    static bool exists(string cat) {
-        return DATABASE["speedrun.ilcategories"].count(["_id": cat]) > 0;
-    }
-
-    /++
-        ID of the category
-    +/
-    @name("_id")
-    string id;
-
-    /++
-        ID of game this category belongs to
-    +/
-    @name("gameId")
-    string gameId;
-
-    /++
-        Display name of category
-    +/
-    @name("displayName")
-    string displayName;
-
-    /++
-        Description of category
-    +/
-    @name("description")
-    string description;
-
-    this() { }
-
-    this(string gameId, string displayName) {
-
-        // Generate a unique ID, while ensuring uniqueness
-        do { this.id = generateID(16); } while(ILCategory.exists(this.id));
-
-        this.gameId = gameId;
-        this.displayName = displayName;
-        DATABASE["speedrun.ilcategories"].insert(this);
-    }
-
-    void remove() {
-        DATABASE["speedrun.ilcategories"].remove(["_id": id]);
     }
 }
 
@@ -202,13 +170,6 @@ class Level {
     string id;
 
     /++
-        What placement the level has in the game
-        (used for ordering levels)
-    +/
-    @name("placement")
-    int placement;
-
-    /++
         ID of game this category belongs to
     +/
     @name("gameId")
@@ -217,8 +178,15 @@ class Level {
     /++
         ID of game this category belongs to
     +/
-    @name("ilCategoryId")
-    string ilCategoryId;
+    @name("categoryId")
+    string categoryId;
+
+    /++
+        What placement the level has in the game
+        (used for ordering levels)
+    +/
+    @name("placement")
+    int placement;
 
     /++
         Display name of category
@@ -227,13 +195,16 @@ class Level {
 
     this() { }
 
-    this(string gameId, string ilCategoryId, string displayName) {
+    this(string gameId, string categoryId, string displayName) {
 
         // Generate a unique ID, while ensuring uniqueness
         do { this.id = generateID(16); } while(Level.exists(this.id));
 
         this.gameId = gameId;
-        this.ilCategoryId = ilCategoryId;
+        this.categoryId = categoryId;
+
+        // Make sure we're assigning this to an IL category
+
         this.displayName = displayName;
         DATABASE["speedrun.levels"].insert(this);
     }

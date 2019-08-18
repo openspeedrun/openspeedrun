@@ -7,16 +7,16 @@ import session;
 class GamesFE {
     @path("/")
     @before!getToken("token")
-    public void getGames(string token) {
-        render!("games/list.dt", token);
+    public void getGames(string token, string searchTerm = "", bool showUnapproved = false) {
+        render!("games/list.dt", token, searchTerm, showUnapproved);
     }
 
     @path("/:gameId")
     @before!getToken("token")
-    public void getGame(string token, string _gameId) {
+    public void getGame(string token, string _gameId, string category="") {
 
         // To give it a more friendly name within the template.
         immutable(string) gameId = _gameId;
-        render!("games/game/view.dt", token, gameId);
+        render!("games/game/view.dt", token, gameId, category);
     }
 }

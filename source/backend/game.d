@@ -23,6 +23,9 @@ import std.algorithm.searching : canFind;
 
 @trusted
 class Game {
+private:
+
+public:
     /++
         Gets a game via id
 
@@ -31,28 +34,39 @@ class Game {
     static Game get(string gameId) {
         return DATABASE["speedrun.games"].findOne!Game(["_id": gameId]);
     }
-
     /++
         Search for games, returns a cursor looking at the games.
     +/
-    static MongoCursor!Game search(string query, int page = 0, int countPerPage = 20) {
-        if (query == "" || query is null) return list(page, countPerPage);
+    static MongoCursor!Game search(string queryString, int page = 0, int countPerPage = 20, bool showUnapproved = false) {
+        if (queryString == "" || queryString is null) return list(page, countPerPage);
+
+        import query : bson;
+
         return DATABASE["speedrun.games"].find!Game(
-            [
-                "$or": [
-                    ["_id": [ "$regex": query ]],
-                    ["name": [ "$regex": query ]],
-                    ["description": [ "$regex": query ]]
-                ]
-            ], 
+            bson([
+                "$and": bson([
+                    bson(["$or": 
+                        bson([
+                            bson(["_id": bson(["$regex": bson(queryString)])]),
+                            bson(["name": bson(["$regex": bson(queryString)])]),
+                            bson(["description": bson(["$regex": bson(queryString)])
+                        ])
+                    ])]),
+                    bson(["approved": bson(showUnapproved)])
+                ])
+            ]), 
             null, 
             QueryFlags.None, 
             page*countPerPage, 
             countPerPage);
     }
 
-    static MongoCursor!Game list(int page = 0, int countPerPage = 20) {
-        return DATABASE["speedrun.games"].find!Game(Bson.emptyObject, 
+    static MongoCursor!Game list(int page = 0, int countPerPage = 20, bool showUnapproved = false) {
+        import query : bson;
+        return DATABASE["speedrun.games"].find!Game(
+            (!showUnapproved) ? bson([
+                "approved": bson(true)
+            ]) : Bson.emptyObject,
             null, 
             QueryFlags.None, 
             page*countPerPage, 

@@ -18,8 +18,9 @@ import std.regex : split, regex;
 import std.conv : to;
 
 import db;
-import vibe.data.serialization;
-import vibe.db.mongo.collection : MongoCollection;
+public import vibe.data.serialization;
+public import vibe.db.mongo.collection : MongoCollection;
+public import vibe.db.mongo.cursor : MongoCursor;
 
 /**
     Implements some mongodb utilities

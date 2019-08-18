@@ -24,11 +24,15 @@ doctype html
 - if (SESSIONS.isValid(token))
     - user = User.get(SESSIONS[token].user);
 
+- void setTitle(string title)
+    title="OpenSpeedRun - " ~ title
+
+
 html
     block init
     head
         // Shared header resources
-        - css("/static/style.css");
+        - css("/static/stylesheets/style.css");
 
         meta(name="viewport", content="width=device-width, initial-scale=1.0")
 
@@ -37,7 +41,7 @@ html
 
         //- Implement basic head template
         block head
-            title="OpenSpeedRun (BETA)"
+            - setTitle("Beta");
 
     body
         .navbar(style="height: 64px;")
@@ -53,7 +57,7 @@ html
                     p="Log in"
             - else
                 .navItem
-                    p="Welcome " ~ user.displayName
+                    a(href="/users/"~user.username)=user.displayName
                 
         .content
             .contentBodyLeft

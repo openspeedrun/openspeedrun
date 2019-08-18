@@ -1,0 +1,63 @@
+extends layout
+block head
+    - setTitle(game !is null ? game.gameName : "Game not found");
+    - css("/static/stylesheets/game.css");
+    - css("/css/"~gameId~".css");
+
+block init
+    - import std.conv : text;
+    - auto game = Game.get(gameId);
+
+    - void addRunner(string name, string time, int rank, string ingameTime = "")
+        tr
+            td(style="text-align:right")=rank
+            td=name
+            - if (game.hasIngameTimer)
+                td=ingameTime
+            td=time
+
+
+block body
+    - if (game is null)
+        p="Could not find game with id "~gameId~"!"
+    - else
+        .widget
+            .widget-title
+                h2(style="flex:2")=game.gameName
+                .categoryList
+                    - foreach(i; 0..5)
+                        button.categoryButton="Category #"~i.text
+            .widget-table
+                table
+                    tr
+                        th(style="width:32px")="Rank"
+                        th="Runner"
+                        - if (game.hasIngameTimer)
+                            th="In-Game Time"
+                        th="Time"
+                    - foreach(i; 1..128)
+                        - addRunner("Runner #"~i.text, "<TIME>", i);
+
+block lbody
+    - if (game !is null)
+        .widget
+            .widget-title
+                h3="Game Info"
+            p=game.description
+
+        .widget
+            .widget-title
+                h3="Rules"
+            p="No rules has been set for this category..."
+block rbody
+    - if (game !is null)
+        - if (user !is null && game.isMod(user.username))
+            .widget
+                .widget-title
+                    h3="Moderation"
+                button="Game Configuration"
+
+            .widget
+                .widget-title
+                    h3="Approval Queue"
+                h5="Here a list of the runs awaiting approval will be."

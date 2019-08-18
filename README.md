@@ -1,6 +1,8 @@
 # OSR
 Open source experimental leaderboard for speedruns written in D and vibe.d
 
+## Discord
+There's a [Discord](https://discord.gg/v4ybzbP) server
 
 ## How to compile
 Install the D toolchain and your compiler of choice and run

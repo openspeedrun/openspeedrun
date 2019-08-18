@@ -64,6 +64,11 @@ public:
 +/
 enum Powers : ushort {
     /**
+        Has full control over server and can't be demoted
+    */
+    WebMaster = ushort.max,
+    
+    /**
         Has full control over server.
     */
     Admin =   9001u,

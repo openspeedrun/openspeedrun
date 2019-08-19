@@ -43,6 +43,12 @@ public:
     string hash;
 
     /++
+        Automatically generated secret for bots
+    +/
+    @name("secret")
+    string botSecret;
+
+    /++
         Create new userauth instance from password
 
         Gets hashed with scrypt.
@@ -51,6 +57,7 @@ public:
         auto hashcomb = hashPassword(password);
         hash = Base64.encode(hashcomb.hash);
         salt = Base64.encode(hashcomb.salt);
+        botSecret = generateID(32);
     }
 
     /++
@@ -68,17 +75,17 @@ enum Powers : ushort {
     /**
         Has full control over server and can't be demoted
     */
-    WebMaster = ushort.max,
+    WebMaster = 1000u,
     
     /**
         Has full control over server.
     */
-    Admin =   9001u,
+    Admin =   100u,
 
     /**
         Moderator can kick/ban users and approve/deny css, but cannot change any server settings.
     */
-    Mod =       42u,
+    Mod =       10u,
 
     /**
         Normal user, has normal user powers. 
@@ -179,6 +186,14 @@ class User {
             "$or": [
                 ["_id": username], 
                 ["email": username]
+            ]
+        ]);
+    }
+
+    static User getFromSecret(string secret) {
+        return DATABASE["speedrun.users"].findOne!User([
+            "$or": [
+                ["auth.secret": secret]
             ]
         ]);
     }

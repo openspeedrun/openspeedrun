@@ -198,8 +198,11 @@ class UserEndpoint : IUserEndpoint {
         if (user.power < Powers.Mod) 
             return Status(StatusCode.StatusDenied);
 
+        User toBan = User.get(_userId);
+        if (!toBan.canPerformActionOnBy(user)) return Status(StatusCode.StatusDenied);
+
         // Ban the user
-        return Status(user.ban(community) ? StatusCode.StatusOK : StatusCode.StatusInvalid);
+        return Status(toBan.ban(community) ? StatusCode.StatusOK : StatusCode.StatusInvalid);
     }
 
     Status pardon(string _userId, string token) {
@@ -213,7 +216,10 @@ class UserEndpoint : IUserEndpoint {
         if (user.power < Powers.Mod) 
             return Status(StatusCode.StatusDenied);
 
-        return Status(user.unban() ? StatusCode.StatusOK : StatusCode.StatusInvalid);
+        User toPardon = User.get(_userId);
+        if (!toPardon.canPerformActionOnBy(user)) return Status(StatusCode.StatusDenied);
+
+        return Status(toPardon.unban() ? StatusCode.StatusOK : StatusCode.StatusInvalid);
     }
 
 

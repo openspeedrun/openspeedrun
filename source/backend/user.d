@@ -310,6 +310,13 @@ class User {
     }
 
     /++
+        Returns true if an administrative action can be performed on the user by the specified user
+    +/
+    bool canPerformActionOnBy(User user) {
+        return power < user.power;
+    }
+
+    /++
         Bans a user.
 
         Set community to true for a community ban.

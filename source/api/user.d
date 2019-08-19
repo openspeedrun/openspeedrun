@@ -56,12 +56,11 @@ struct RegData {
 interface IAuthenticationEndpoint {
 
     /++
-        Logs in user
+        Logs in as bot account
     +/
     @method(HTTPMethod.POST)
-    @path("/login/:username")
-    @bodyParam("data")
-    StatusT!Token login(string _username, AuthData data);
+    @path("/login")
+    StatusT!Token login(string authToken);
 
     /++
         Logs out user
@@ -138,25 +137,19 @@ enum AUTH_FAIL_MSG = "Invalid username or password";
 +/
 @trusted
 class AuthenticationEndpoint : IAuthenticationEndpoint {
-    StatusT!Token login(string username, AuthData data) {
+    StatusT!Token login(string secret) {
         import std.stdio : writeln;
 
         // Get user instance, if user doesn't exist return status invalid
-        User userPtr = User.get(username);
+        User userPtr = User.getFromSecret(secret);
         if (userPtr is null) return StatusT!Token.error(StatusCode.StatusInvalid, AUTH_FAIL_MSG);
 
         // Update and destroy old sessions
         SESSIONS.update();
 
-        // Verify password
-        if (!userPtr.auth.verify(data.password)) return StatusT!Token.error(StatusCode.StatusDenied, AUTH_FAIL_MSG);
-
         // If the user already has a running session just send that
         // Otherwise create a new session
-        if (SESSIONS.findUser(username) !is null) {
-            return StatusT!Token(StatusCode.StatusOK, SESSIONS.findUser(username).token);
-        }
-        return StatusT!Token(StatusCode.StatusOK, SESSIONS.createSession(data.lifetime.lifetimeFromLong, username).token);
+        return StatusT!Token(StatusCode.StatusOK, SESSIONS.createSession(practicallyInfinite(), userPtr.username).token);
     }
 
     Status logout(Token token) {

@@ -16,7 +16,6 @@
 import std.stdio;
 import vibe.d;
 import api;
-import frontend;
 import session;
 import config;
 import backend.mail;
@@ -47,10 +46,9 @@ void main()
 
     // Frontend
     logInfo("Binding frontend...");
-    router.registerWebInterface(new CSSFE);
-    router.registerWebInterface(new AuthFE);
-    router.registerWebInterface(new GamesFE);
-    router.registerWebInterface(new HomeFE);
+    router.any("/", (req, res) {
+        res.render!("app.dt", req, res);
+    });
     
 	// Static files
     logInfo("Binding static file server...");

@@ -201,9 +201,18 @@ a:active {
     align-items: center;
 }
 
-.widget-title * {
+.widget-title>* {
     flex: 1;
     padding: 8px;
+}
+
+.right-adjust {
+    display: inline-block;
+}
+
+.right-adjust>* {
+    text-align: right;
+    float: right;
 }
 
 .widget>*:not(.widget-title) {

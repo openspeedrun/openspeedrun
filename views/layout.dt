@@ -18,16 +18,9 @@
     https://github.com/openspeedrun/openspeedrun
 include utils
 doctype html
-- import session;
-- import backend;
-- import std.format;
-- User user;
-- if (SESSIONS.isValid(token))
-    - user = User.get(SESSIONS[token].user);
 
 - void setTitle(string title)
     title="OpenSpeedRun - " ~ title
-
 
 html
     block init
@@ -41,36 +34,40 @@ html
         link(rel="shortcut icon", href="/static/favicon.png")
         link(rel="apple-touch-icon-precomposed", href="/static/favicon.png")
 
+        - script("https://unpkg.com/axios/dist/axios.min.js");
+        - script("https://cdn.jsdelivr.net/npm/vue/dist/vue.js");
+
         //- Implement basic head template
         block head
             - setTitle("Beta");
 
     body
-        .navbar(style="height: 64px;")
-            a.navItem.navLogo(href="/")
-                img(src="/static/logo.png")
-            a.navButton(href="/games")
-                p="Games"
-            a.navButton(href="/runs")
-                p="Runs"
-            .spacer
-            - if (user is null)
-                a.navButton(href="/auth/login")
-                    p="Log in"
-            - else
-                .navItem
-                    a(href="/users/"~user.username)=user.displayName
+        #app
+            .navbar(style="height: 64px;")
+                a.navItem.navLogo(href="/")
+                    img(src="/static/logo.png")
+                a.navButton(href="/games")
+                    p="Games"
+                a.navButton(href="/runs")
+                    p="Runs"
+                .spacer
+                    
+            .content
+                .contentBodyLeft
+                    block lbody
+                        |{{ lbody }}
+
+                .contentBody
+                    block body
+                        |{{ body }}
                 
-        .content
-            .contentBodyLeft
-                block lbody
-
-            .contentBody
-                block body
-
-            
-            .contentBodyRight
-                block rbody
-        center
-            p="OpenSpeedRun © Clipsey"
-            a(href="https://github.com/openspeedrun/openspeedrun")="Fork on GitHub!"
+                .contentBodyRight
+                    block rbody
+                        |{{ rbody }}
+            center
+                p="OpenSpeedRun © Clipsey"
+                a(href="https://github.com/openspeedrun/openspeedrun")="Fork on GitHub!"
+        
+        //- Initialize app
+        block postdom
+            - script("/static/app/app.js");

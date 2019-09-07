@@ -1,8 +1,0 @@
-extends layout
-block body
-    - if (user !is null)
-        p="Welcome "~user.displayName~"!"
-        | Front page is not implemented yet.
-        | Please check out the Games and Runs pages
-    - else
-        p="TODO: Implement front page"

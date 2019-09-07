@@ -1,0 +1,13 @@
+extends layout
+
+block postdom
+    - script("/static/app/app.js");
+
+block rbody
+    |{{ rbody }}
+
+block body
+    |{{ body }}
+    
+block lbody
+    |{{ lbody }}

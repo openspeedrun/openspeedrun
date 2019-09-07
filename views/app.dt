@@ -7,7 +7,11 @@ block rbody
     |{{ rbody }}
 
 block body
+    component(v-bind:is="currentComponent")
+        |Test
+    component(v-bind:is="currentComponent")
+        |Test 2
     |{{ body }}
-    
+
 block lbody
     |{{ lbody }}

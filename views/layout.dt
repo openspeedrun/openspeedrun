@@ -59,15 +59,12 @@ html
 
                 .contentBody
                     block body
-                        |{{ body }}
                 
                 .contentBodyRight
                     block rbody
-                        |{{ rbody }}
             center
                 p="OpenSpeedRun © Clipsey"
                 a(href="https://github.com/openspeedrun/openspeedrun")="Fork on GitHub!"
         
         //- Initialize app
         block postdom
-            - script("/static/app/app.js");

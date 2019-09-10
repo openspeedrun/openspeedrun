@@ -17,7 +17,6 @@ module api.level;
 import vibe.web.rest;
 import vibe.data.serialization;
 import db;
-import session;
 import api.common;
 import api.user;
 

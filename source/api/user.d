@@ -18,8 +18,10 @@ import api.common;
 import vibe.web.rest;
 import vibe.http.common;
 import backend.user;
+import backend.registrations;
 import vibe.data.serialization;
-import session;
+import backend.auth.jwt;
+import config;
 
 /++
     Data used for authentication (logging in)
@@ -62,13 +64,13 @@ interface IAuthenticationEndpoint {
     @path("/login")
     StatusT!Token login(string authToken);
 
+
     /++
-        Logs out user
+        Logs in as user account
     +/
     @method(HTTPMethod.POST)
-    @path("/logout")
-    @bodyParam("token")
-    Status logout(Token token);
+    @path("/login/:username")
+    StatusT!Token login(string _username, string password);
 
     /++
         Verifies a new user allowing them to create/post runs, etc.
@@ -77,6 +79,14 @@ interface IAuthenticationEndpoint {
     @path("/verify")
     @bodyParam("verifykey")
     Status verify(string verifykey);
+
+    /++
+        Gets the status of a user's JWT token
+    +/
+    @method(HTTPMethod.POST)
+    @path("/status")
+    @before!getJWTToken("token")
+    Status getUserStatus(JWTToken* token);
 }
 
 /++
@@ -98,7 +108,8 @@ interface IUserEndpoint {
     +/
     @path("/update")
     @method(HTTPMethod.GET)
-    Status update(string token, User data);
+    @before!getJWTToken("token")
+    Status update(JWTToken* token, User data);
 
     /++
         === Moderator+ ===
@@ -107,17 +118,17 @@ interface IUserEndpoint {
     +/
     @path("/ban/:userId")
     @method(HTTPMethod.POST)
-    @bodyParam("token")
     @queryParam("community", "c")
-    Status ban(string _userId, string token, bool community = true);
+    @before!getJWTToken("token")
+    Status ban(JWTToken* token, string _userId, bool community = true);
 
     /++
         === Moderator+ ===
     +/
     @path("/pardon/:userId")
     @method(HTTPMethod.POST)
-    @bodyParam("token")
-    Status pardon(string _userId, string token);
+    @before!getJWTToken("token")
+    Status pardon(JWTToken* token, string _userId);
 
     /++
         Removes user from database with token.
@@ -126,7 +137,8 @@ interface IUserEndpoint {
         Verify with password!
     +/
     @path("/rmuser")
-    Status rmuser(string token, string password);
+    @before!getJWTToken("token")
+    Status rmuser(JWTToken* token, string password);
 
 }
 
@@ -137,35 +149,67 @@ enum AUTH_FAIL_MSG = "Invalid username or password";
 +/
 @trusted
 class AuthenticationEndpoint : IAuthenticationEndpoint {
-    StatusT!Token login(string secret) {
-        import std.stdio : writeln;
+private:
+    string createToken(User user) {
+        import vibe.data.json : serializeToJson, Json;
+        JWTToken token;
+        token.header.algorithm = JWTAlgorithm.HS512;
+        token.payload = Json.emptyObject();
+        token.payload["username"] = user.username;
+        token.payload["power"] = user.power;
+        token.payload["pronouns"] = serializeToJson(user.pronouns);
 
-        // Get user instance, if user doesn't exist return status invalid
+        // TODO: Make token expire.
+
+        token.sign();
+
+        return token.toString();
+    }
+
+public:
+    /// Login (bot)
+    StatusT!string login(string secret) {
+
+        // Get user instance
         User userPtr = User.getFromSecret(secret);
+
+        // If user doesn't exist, make error
         if (userPtr is null) return StatusT!Token.error(StatusCode.StatusInvalid, AUTH_FAIL_MSG);
 
-        // Update and destroy old sessions
-        SESSIONS.update();
+        // If user hasn't verified their email (and such is turned on), make error
+        if (CONFIG.auth.emailVerification && !userPtr.verified) return StatusT!Token.error(StatusCode.StatusInvalid, AUTH_FAIL_MSG);
 
-        // If the user already has a running session just send that
-        // Otherwise create a new session
-        return StatusT!Token(StatusCode.StatusOK, SESSIONS.createSession(practicallyInfinite(), userPtr.username).token);
+        // Start new session via JWT token
+        return StatusT!Token(StatusCode.StatusOK, createToken(userPtr));
     }
 
-    Status logout(Token token) {
-        // Make sure the token is valid
-        if (!SESSIONS.isValid(token)) 
-            return Status(StatusCode.StatusInvalid);
+    /// Login (user)
+    StatusT!string login(string username, string password) {
 
-        if (token in SESSIONS) {
-            SESSIONS.kill(token);
-        }
-        return Status(StatusCode.StatusOK);
+        // Get user instance
+        User userPtr = User.get(username);
+
+        // If user doesn't exist, make error
+        if (userPtr is null) return StatusT!Token.error(StatusCode.StatusInvalid, AUTH_FAIL_MSG);
+
+        // If user hasn't verified their email (and such is turned on), make error
+        if (CONFIG.auth.emailVerification && !userPtr.verified) return StatusT!Token.error(StatusCode.StatusInvalid, AUTH_FAIL_MSG);
+
+        // If the password isn't correct, make error
+        //if (!userPtr.auth.verify(password)) return StatusT!Token.error(StatusCode.StatusInvalid, AUTH_FAIL_MSG);
+
+        // Start new session via JWT token
+        return StatusT!Token(StatusCode.StatusOK, createToken(userPtr));
     }
 
+    /// Verify user
     Status verify(string verifykey) {
-        // TODO: verify a user
-        return Status(StatusCode.StatusOK);
+        return Status(Registration.verifyUser(verifykey) ? StatusCode.StatusOK : StatusCode.StatusDenied);
+    }
+
+    Status getUserStatus(JWTToken* token) {
+        if (token is null) return Status(StatusCode.StatusDenied);
+        return User.getValidFromJWT(token) ? Status(StatusCode.StatusOK) : Status(StatusCode.StatusInvalid);
     }
 }
 
@@ -179,54 +223,44 @@ class UserEndpoint : IUserEndpoint {
         return StatusT!FEUser(StatusCode.StatusOK, user.getInfo());
     }
 
-    Status update(string token, User data) {
-        // Make sure the token is valid
-        if (!SESSIONS.isValid(token)) 
-            return Status(StatusCode.StatusDenied);
+    Status update(JWTToken* token, User data) {
+        if (token is null) return Status(StatusCode.StatusDenied);
 
         return Status(StatusCode.StatusOK);
     }
 
-    Status ban(string _userId, string token, bool community = true) {
-        // Make sure the token is valid
-        if (!SESSIONS.isValid(token)) 
-            return Status(StatusCode.StatusDenied);
+    Status ban(JWTToken* token, string _userId, bool community = true) {
+        if (token is null) return Status(StatusCode.StatusDenied);
 
         // Make sure the user has the permissions neccesary
-        if (!User.getValid(SESSIONS[token].user)) return Status(StatusCode.StatusInvalid);
-        User user = User.get(SESSIONS[token].user);
-        if (user.power < Powers.Mod) 
-            return Status(StatusCode.StatusDenied);
+        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
+        User user = User.getFromJWT(token);
+        if (user.power < Powers.Mod) return Status(StatusCode.StatusDenied);
 
         User toBan = User.get(_userId);
-        if (!toBan.canPerformActionOnBy(user)) return Status(StatusCode.StatusDenied);
+        if (!user.canPerformActionOn(toBan)) return Status(StatusCode.StatusDenied);
 
         // Ban the user
         return Status(toBan.ban(community) ? StatusCode.StatusOK : StatusCode.StatusInvalid);
     }
 
-    Status pardon(string _userId, string token) {
-        // Make sure the token is valid
-        if (!SESSIONS.isValid(token)) 
-            return Status(StatusCode.StatusDenied);
+    Status pardon(JWTToken* token, string _userId) {
+        if (token is null) return Status(StatusCode.StatusDenied);
 
         // Make sure the user has the permissions neccesary
-        if (!User.getValid(SESSIONS[token].user)) return Status(StatusCode.StatusInvalid);
-        User user = User.get(SESSIONS[token].user);
-        if (user.power < Powers.Mod) 
-            return Status(StatusCode.StatusDenied);
+        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
+        User user = User.getFromJWT(token);
+        if (user.power < Powers.Mod) return Status(StatusCode.StatusDenied);
 
         User toPardon = User.get(_userId);
-        if (!toPardon.canPerformActionOnBy(user)) return Status(StatusCode.StatusDenied);
+        if (!user.canPerformActionOn(toPardon)) return Status(StatusCode.StatusDenied);
 
         return Status(toPardon.unban() ? StatusCode.StatusOK : StatusCode.StatusInvalid);
     }
 
 
-    Status rmuser(string token, string password) {
-        // Make sure the token is valid
-        if (!SESSIONS.isValid(token)) 
-            return Status(StatusCode.StatusDenied);
+    Status rmuser(JWTToken* token, string password) {
+        if (token is null) return Status(StatusCode.StatusDenied);
 
         return Status(StatusCode.StatusOK);
     }

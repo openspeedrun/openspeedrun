@@ -16,17 +16,12 @@
 import std.stdio;
 import vibe.d;
 import api;
-import session;
 import config;
 import backend.mail;
 
 void main()
 {
     URLRouter router = new URLRouter;
-
-    // Create a new session manager
-    logInfo("Warming up session manager...");
-    SESSIONS = new SessionManagerImpl();
 
     logInfo("Loading configuration...");
     CONFIG = loadConfigSDLFile!ServerConfig("osrconfig", true);

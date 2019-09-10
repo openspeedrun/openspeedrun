@@ -18,7 +18,6 @@ import vibe.data.serialization;
 import vibe.data.bson;
 import std.algorithm;
 import std.base64;
-import session;
 import db;
 import crypt;
 import std.range;
@@ -26,6 +25,7 @@ import std.algorithm;
 import backend.common;
 import backend.registrations;
 import config;
+import backend.auth.jwt;
 
 /++
     User authentication info
@@ -198,6 +198,18 @@ class User {
         ]);
     }
 
+    static User getFromJWT(JWTToken* token) {
+        // Verify that the token exists.
+        if (token is null) return null;
+
+        // Try to fetch username
+        string username = token.payload["username"].opt!string(null);
+        if (username is null) return null;
+
+        // We got it, return user from db with that name
+        return get(username);
+    }
+
     /++
         Gets wether the user is valid on the site
 
@@ -209,6 +221,22 @@ class User {
         User user = get(username);
         if (user is null) return false;
         return user.verified;
+    }
+
+    /++
+        Gets wether the user is valid on the site from a JWT token
+
+        Validity:
+        * Is a user
+        * Has verified their email
+    +/
+    static bool getValidFromJWT(JWTToken* token) {
+        import std.stdio : writeln;
+        if (token is null) return false;
+
+        string username = token.payload["username"].opt!string(null);
+        if (username is null) return false;
+        return getValid(username);
     }
 
     /++
@@ -310,10 +338,10 @@ class User {
     }
 
     /++
-        Returns true if an administrative action can be performed on the user by the specified user
+        Returns true if an administrative action can be performed on the specified user
     +/
-    bool canPerformActionOnBy(User user) {
-        return power < user.power;
+    bool canPerformActionOn(User other) {
+        return power > other.power;
     }
 
     /++

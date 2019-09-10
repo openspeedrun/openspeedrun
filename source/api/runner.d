@@ -15,6 +15,5 @@
 +/
 module api.runner;
 import vibe.web.rest;
-import session;
 import api.common;
 import api.user;

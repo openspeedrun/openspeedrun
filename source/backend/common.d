@@ -219,3 +219,9 @@ string generateID(int length = 16) {
     import secured.random;
     return Base64URLNoPadding.encode(random(length));
 }
+
+ubyte[] generateIDArr(int length = 16) {
+    import std.base64 : Base64URLNoPadding;
+    import secured.random;
+    return random(length);
+}

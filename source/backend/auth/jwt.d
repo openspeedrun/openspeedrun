@@ -1,22 +1,29 @@
 module backend.auth.jwt;
-import backend.common : generateID;
+import backend.common : generateIDArr;
 import secured.mac;
 import vibe.data.json;
 import vibe.data.serialization;
 import std.base64 : Base64URLNoPadding;
 import secured.hash : HashAlgorithm;
+import std.format : format;
+import std.datetime;
 
 // Following is some helper functions to make sure the implementation is consistent
 
 private ubyte[] defaultKey;
 
 static this() {
-    defaultKey = generateID(32);
+    defaultKey = generateIDArr(32);
+}
+
+/// Gets the default key used for signing the tokens
+string getDefaultKey() {
+    return b64Encode(defaultKey);
 }
 
 /// Encode a string to a base64 string that is compatible
 string b64Encode(string data) {
-    return Base64URLNoPadding.encode(data);
+    return Base64URLNoPadding.encode(stringToBytes(data));
 }
 
 /// Encode a byte array to a base64 string that is compatible
@@ -32,7 +39,7 @@ ubyte[] b64Decode(string b64) {
 /// Convert a string to an array of bytes
 ubyte[] stringToBytes(string utf8) {
     import std.string : representation;
-    return utf8.representation;
+    return utf8.representation.dup;
 }
 
 /// Convert an array of bytes to a string
@@ -62,7 +69,7 @@ struct JWTHeader {
     string type = "JWT";
 
     string toString() {
-        return serializeToJson(this);
+        return serializeToJsonString(this);
     }
 }
 
@@ -72,7 +79,7 @@ struct JWTHeader {
 struct JWTToken {
 public:
     /**
-        The header of a JWT Token
+        The header of a JWT Token        
     */
     JWTHeader header;
 
@@ -99,7 +106,7 @@ public:
         string[] parts = jwtToken.split('.');
         header = deserializeJson!JWTHeader(parts[0].b64Decode.bytesToString());
         payload = parseJsonString(parts[1].b64Decode.bytesToString());
-        signature = parts[2].b64Decode.bytesToString();
+        signature = parts[2];
     }
 
     /**
@@ -125,25 +132,31 @@ public:
     }
 
     /**
-        Verifies that the token isn't expired and hasn't been tampered with
+        Verifies that the token is valid at current time and that it hasn't been tampered with
     */
     bool verify(ubyte[] secret) {
-        import std.datetime : Clock, toUnixTime;
 
-        // Get expiry time from json
-        immutable(Json) exp = payload["exp"];
+        // Get the current time, used in calculations
+        immutable(long) currentTime = Clock.currStdTime();
 
         // Make sure that the expiry time actually exists.
-        if (exp !is null && exp.type != Json.Type.Null) {
-            
-            // Verify that the expiry time is an int (unix time)
-            if (exp.type != Json.Type.int_) return false;
+        if (payload["exp"].type != Json.Type.undefined) {
 
-            immutable(long) expiryTime = exp.to!long;
-            immutable(long) currentTime = Clock.currStdTime().toUnixTime!long;
+            // Get EXP time, if not available, set to smallest possible value.
+            immutable(long) expiryTime = payload["exp"].opt!long(long.min);
 
             // The token has expired.
             if (currentTime >= expiryTime) return false;
+        }
+
+        // Make sure that the not-before time actually exists.
+        if (payload["nbf"].type != Json.Type.undefined) {
+            
+            // Get NBF time, if not available, set to smallest possible value.
+            immutable(long) nbfTime = payload["nbf"].opt!long(long.min);
+
+            // The token has expired.
+            if (currentTime < nbfTime) return false;
         }
 
         // Finally check the signature
@@ -160,7 +173,7 @@ public:
     /** 
         Output the final JWT token
     */
-    string toString() const {
+    string toString() {
         // return the fo
         return "%s.%s.%s".format(header.toString().b64Encode(), payload.toString().b64Encode(), signature);
     }
@@ -171,17 +184,17 @@ public:
 */
 bool validateJWTStructure(string jwtString) {
     import std.algorithm.searching : count;
-    if (jwtString.count(".") != 2) return false;
+    return jwtString.count(".") == 2;
 }
 
 /**
     Generate a signature for a JWT token
 */
-string genSignature(T)(JWTHeader header, Json payload, ubyte[] secret) {
+string genSignature(JWTHeader header, Json payload, ubyte[] secret) {
     string toSign = "%s.%s".format(header.toString().b64Encode(), payload.toString().b64Encode());
 
     // All the signing here does somewhat the same, just passes a different SHA algorithm in
-    switch(header.algorithm) {
+    final switch(header.algorithm) {
         case JWTAlgorithm.HS256:
             return hmac_ex(secret, stringToBytes(toSign), HashAlgorithm.SHA2_256).b64Encode();
         case JWTAlgorithm.HS384:
@@ -205,7 +218,7 @@ bool verifySignature(JWTToken token, ubyte[] secret) {
     string toSign = "%s.%s".format(token.header.toString().b64Encode(), token.payload.toString().b64Encode());
 
     // All the verifications here does somewhat the same, just passes a different SHA algorithm in
-    switch(token.header.algorithm) {
+    final switch(token.header.algorithm) {
         case JWTAlgorithm.HS256:
             return hmac_verify_ex(token.signature.b64Decode, secret, stringToBytes(toSign), HashAlgorithm.SHA2_256);
         case JWTAlgorithm.HS384:
@@ -214,3 +227,21 @@ bool verifySignature(JWTToken token, ubyte[] secret) {
             return hmac_verify_ex(token.signature.b64Decode, secret, stringToBytes(toSign), HashAlgorithm.SHA2_512);
     }
 }
+
+import vibe.http.server;
+static JWTToken* getJWTToken(HTTPServerRequest req, HTTPServerResponse res) {
+    try {
+        immutable(string) header = req.headers.get("Authorization", null);
+
+        // Header does not exist
+        if (header is null) return null;
+
+        // Verify token
+        JWTToken* token = new JWTToken(header);
+        return token.verify() ? token : null;
+    } catch (Exception ex) {
+        import vibe.core.log : logError, logInfo;
+        logError("%s", ex.msg);
+        return null;
+    }
+} 

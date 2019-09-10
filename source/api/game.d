@@ -16,13 +16,12 @@
 module api.game;
 import vibe.web.rest;
 import vibe.http.common;
-import session;
 import api.common;
 import backend.user;
 import backend.game;
+import backend.auth.jwt;
 
 struct GameCreationData {
-    string token;
     string name;
     string description;
 }
@@ -52,15 +51,16 @@ interface IGameEndpoint {
     @method(HTTPMethod.POST)
     @path("/:gameId")
     @bodyParam("data")
-    Status createGame(string _gameId, GameCreationData data);
+    @before!getJWTToken("token")
+    Status createGame(JWTToken* token, string _gameId, GameCreationData data);
 
     /++
         Promotes a user to moderator of the game
     +/
     @method(HTTPMethod.POST)
     @path("/:gameId/promote/:userId/:rank")
-    @bodyParam("token")
-    Status setRank(string _gameId, string _userId, string token, int _rank);
+    @before!getJWTToken("token")
+    Status setRank(JWTToken* token, string _gameId, string _userId, int _rank);
 
     /++
         === Moderator+ ===
@@ -69,8 +69,8 @@ interface IGameEndpoint {
     +/
     @method(HTTPMethod.POST)
     @path("/accept/:gameId")
-    @bodyParam("token")
-    Status acceptGame(string _gameId, string token);
+    @before!getJWTToken("token")
+    Status acceptGame(JWTToken* token, string _gameId);
 
     /++
         === Moderator+ ===
@@ -81,8 +81,8 @@ interface IGameEndpoint {
     +/
     @method(HTTPMethod.POST)
     @path("/deny/:gameId")
-    @bodyParam("token")
-    Status denyGame(string _gameId, string token);
+    @before!getJWTToken("token")
+    Status denyGame(JWTToken* token, string _gameId);
 }
 
 class GameEndpoint : IGameEndpoint {
@@ -101,40 +101,42 @@ class GameEndpoint : IGameEndpoint {
         return StatusT!(Game[])(StatusCode.StatusOK, games);
     }
 
-    Status createGame(string _gameId, GameCreationData data) {
+    Status createGame(JWTToken* token, string _gameId, GameCreationData data) {
         // Make sure the token is valid
-        if (!SESSIONS.isValid(data.token)) 
+        if (token is null) 
             return Status(StatusCode.StatusDenied);
 
         // Make sue that the user is valid
-        if (!User.getValid(SESSIONS[data.token].user)) return Status(StatusCode.StatusInvalid);
+        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
+        User user = User.getFromJWT(token);
+
 
         // Make sure Game DOES NOT exists.
         if (Game.get(_gameId) !is null) return Status(StatusCode.StatusInvalid);
 
 
-        Game game = new Game(_gameId, data.name, data.description, SESSIONS[data.token].user);
+        Game game = new Game(_gameId, data.name, data.description, user.username);
         return game !is null ? Status(StatusCode.StatusOK) : Status(StatusCode.StatusInvalid);
     }
 
-    Status setRank(string _gameId, string _userId, string token, int _rank) {
+    Status setRank(JWTToken* token, string _gameId, string _userId, int _rank) {
         // Make sure the token is valid
-        if (!SESSIONS.isValid(token)) 
+        if (token is null) 
             return Status(StatusCode.StatusDenied);
-        
+
+        // Make sue that the user is valid
+        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
+
         // Make sure the game exists
         if (Game.get(_gameId) is null) return Status(StatusCode.StatusInvalid);
-
-        // Make sure the user has the permissions to accept the CSS
-        if (!User.getValid(SESSIONS[token].user)) return Status(StatusCode.StatusInvalid);
 
         // TODO: finish this
         return Status(StatusCode.StatusInternalErr);
     }
 
-    Status acceptGame(string _gameId, string token) {
+    Status acceptGame(JWTToken* token, string _gameId) {
         // Make sure the token is valid
-        if (!SESSIONS.isValid(token)) 
+        if (token is null) 
             return Status(StatusCode.StatusDenied);
         
         // Make sure the game exists
@@ -142,8 +144,8 @@ class GameEndpoint : IGameEndpoint {
         if (game is null) return Status(StatusCode.StatusInvalid);
 
         // Make sure the user has the permissions to accept the CSS
-        if (!User.getValid(SESSIONS[token].user)) return Status(StatusCode.StatusInvalid);
-        User user = User.get(SESSIONS[token].user);
+        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
+        User user = User.getFromJWT(token);
         if (user.power < Powers.Mod) 
             return Status(StatusCode.StatusDenied);
 
@@ -151,18 +153,18 @@ class GameEndpoint : IGameEndpoint {
         return Status(StatusCode.StatusOK);
     }
 
-    Status denyGame(string _gameId, string token) {
+    Status denyGame(JWTToken* token, string _gameId) {
         // Make sure the token is valid
-        if (!SESSIONS.isValid(token)) 
+        if (token is null) 
             return Status(StatusCode.StatusDenied);
         
         // Make sure the game exists
         Game game = Game.get(_gameId);
         if (game is null) return Status(StatusCode.StatusInvalid);
 
-        // Make sure the user has the permissions neccesary
-        if (!User.getValid(SESSIONS[token].user)) return Status(StatusCode.StatusInvalid);
-        User user = User.get(SESSIONS[token].user);
+        // Make sure the user has the permissions to deny the CSS
+        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
+        User user = User.getFromJWT(token);
         if (user.power < Powers.Mod) 
             return Status(StatusCode.StatusDenied);
 

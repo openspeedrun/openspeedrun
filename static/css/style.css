@@ -206,6 +206,15 @@ a:active {
     padding: 8px;
 }
 
+.widget-body {
+    min-height: 128px;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    width: 100%;
+}
+
 .right-adjust {
     display: inline-block;
 }

@@ -43,28 +43,12 @@ html
 
     body
         #app
-            .navbar(style="height: 64px;")
-                a.navItem.navLogo(href="/")
-                    img(src="/static/logo.png")
-                a.navButton(href="/games")
-                    p="Games"
-                a.navButton(href="/runs")
-                    p="Runs"
-                .spacer
-                    
-            .content
-                .contentBodyLeft
-                    block lbody
-                        |{{ lbody }}
 
-                .contentBody
-                    block body
-                
-                .contentBodyRight
-                    block rbody
-            center
-                p="OpenSpeedRun © Clipsey"
-                a(href="https://github.com/openspeedrun/openspeedrun")="Fork on GitHub!"
+        block body
+
+        center
+            p="OpenSpeedRun © Clipsey"
+            a(href="https://github.com/openspeedrun/openspeedrun")="Fork on GitHub!"
         
         //- Initialize app
         block postdom

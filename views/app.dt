@@ -3,15 +3,29 @@ extends layout
 block postdom
     - script("/static/app/app.js");
 
-block rbody
-    |{{ rbody }}
-
 block body
-    component(v-bind:is="currentComponent")
-        |Test
-    component(v-bind:is="currentComponent")
-        |Test 2
-    |{{ body }}
+    noscript
+        .widget
+            .widget-title
+                center
+                    h2="Oh, oops..."
+            .widget-body
+                h3="JavaScript is needed to use this page, sorry."
+                p
+                    |This page is a single-page application.
+                    br
+                    |If you have noscript on, please disable it for this site.
+                p
+                    |If you are using a browser that doesn't support javascript
+                    br
+                    |please user a browser that supports it.
+                br
+                p
+                    |Sorry for the inconvenience!
+                    br
+                    | - The Developer
 
-block lbody
-    |{{ lbody }}
+block head
+    noscript
+        :css
+            .js_test { display: none; }

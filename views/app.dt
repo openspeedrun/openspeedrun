@@ -1,5 +1,9 @@
 extends layout
 
+block init
+    - script("/static/app/js/chunk-vendors.js");
+    //- TODO: Add Axios
+
 block postdom
     - script("/static/app/js/app.js");
 

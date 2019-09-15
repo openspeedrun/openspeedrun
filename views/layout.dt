@@ -26,16 +26,13 @@ html
     block init
     head
         // Shared header resources
-        - css("/static/css/style.css");
+        - css("/static/app/css/style.css");
 
         meta(name="viewport", content="width=device-width, initial-scale=1.0")
         meta(charset="utf-8")
 
         link(rel="shortcut icon", href="/static/favicon.png")
         link(rel="apple-touch-icon-precomposed", href="/static/favicon.png")
-
-        - script("https://unpkg.com/axios/dist/axios.min.js");
-        - script("https://cdn.jsdelivr.net/npm/vue/dist/vue.js");
 
         //- Implement basic head template
         block head

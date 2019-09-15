@@ -21,7 +21,7 @@ openspeedrun-test-*
 # basic stuff
 .DS_Store
 node_modules
-static/app
+static/app/js
 
 # local env files
 .env.local

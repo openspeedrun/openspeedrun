@@ -1,7 +1,7 @@
 extends layout
 
 block postdom
-    - script("/static/app/app.js");
+    - script("/static/app/js/app.js");
 
 block body
     noscript

@@ -37,19 +37,18 @@ void main()
         router.registerRestInterface!ICSSEndpoint(new CSSEndpoint(), "/api/v1");
         router.registerRestInterface!IGameEndpoint(new GameEndpoint(), "/api/v1");
     }
-   
-
-    // Frontend
-    logInfo("Binding frontend...");
-    router.any("/", (req, res) {
-        res.render!("app.dt", req, res);
-    });
     
 	// Static files
     logInfo("Binding static file server...");
 	auto fsettings = new HTTPFileServerSettings;
 	fsettings.serverPathPrefix = "/static";
 	router.get("/static/*", serveStaticFiles("static/", fsettings));
+
+    // Frontend
+    logInfo("Binding frontend...");
+    router.any("*", (req, res) {
+        res.render!("app.dt", req, res);
+    });
 
     // Launch server.
     logInfo("Launching server...");

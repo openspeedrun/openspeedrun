@@ -1,18 +1,17 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
-  </div>
+    <div class="content">
+        <link rel="shortcut icon" href="/static/assets/favicon.png" />
+        <title>OpenSpeedRun - Home</title>
+
+        <!-- TODO: Make home page -->
+        <p>
+            This is the home page for OpenSpeedRun, it's pretty barren right now
+        </p>
+    </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import HelloWorld from '@/components/HelloWorld.vue'; // @ is an alias to /src
-
-@Component({
-  components: {
-    HelloWorld,
-  },
-})
-export default class Home extends Vue {}
+export default {
+    name: 'Home'
+}
 </script>

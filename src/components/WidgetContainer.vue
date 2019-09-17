@@ -1,17 +1,19 @@
 <template>
     <div class="container">
-        <div class="container-title" v-if="title !== null">
-            {{ title }}
+        <div class="container-title">
+            <h2>{{ title }}</h2>
         </div>
-        <slot></slot>
+        <div class="container-body">
+            <slot />
+        </div>
     </div>
 </template>
 
 <script lang="ts">
     import { Component, Prop, Vue } from 'vue-property-decorator';
 
-    @Component
+    @Component({ name: "widget-container" })
     export default class WidgetContainer extends Vue {
-        title: string | null = null;
+        @Prop({default: null}) title: string;
     }
 </script>

@@ -96,6 +96,28 @@ a:active {
     text-shadow: 0px 0px 12px var(--pg-dark-active);
 }
 
+/*
+    Controls
+*/
+
+.avatar-small {
+    margin: 2px;
+    display: inline-flex;
+    border: 2px solid var(--navbar-bg-sep);
+    border-radius: 50%;
+    
+    width: 54px;
+    height: 54px;
+    overflow: hidden;
+    user-select: none;
+}
+
+.avatar-small>img {
+    width: 54px;
+    height: auto;
+    flex: 1;
+}
+
 .navbar {
     width: 100%;
     height: 64px;
@@ -108,6 +130,21 @@ a:active {
 
 .spacer {
     flex: 2;
+    background: #702a2a;
+}
+
+.nav-gradout {
+    background: #702a2a;
+    background: linear-gradient(90deg, #9b3838 0%, #702a2a 100%);
+    width: 16px;
+    height: 100%;
+}
+
+.nav-gradin {
+    background: #702a2a;
+    background: linear-gradient(90deg, #702a2a 0%, #9b3838 100%);
+    width: 16px;
+    height: 100%;
 }
 
 .navLogo {
@@ -132,7 +169,30 @@ a:active {
     height: inherit;
 }
 
-.navButton {
+.nav-item-wrapper {
+    display: inline-flex;
+    justify-items: center;
+    align-items: center;
+}
+
+.nav-item-wrapper * {
+    flex: 1;
+}
+
+.s-nav-button {
+
+    display: inline-flex;
+    height: inherit;
+    background-color: var(--navbtn-bg);
+    color: var(--navbar-fg);
+
+    align-content: center;
+    text-decoration: none;
+
+    transition-duration: var(--transition-time);
+}
+
+.nav-button {
 
     min-width: 128px;
 
@@ -147,19 +207,20 @@ a:active {
     transition-duration: var(--transition-time);
 }
 
-.navButton:hover {
+.nav-button:hover, .s-nav-button:hover {
     background-color: var(--navbtn-bg-hover);
 }
 
-.navButton:active {
+.nav-button:active, .s-nav-button:active {
     background-color: var(--navbtn-bg-active);
     outline: none;
 }
 
-.navButton * {
+.nav-button p {
     flex: 1;
     align-self: center;
     text-align: center;
+    user-select: none;
 }
 
 .content {
@@ -184,7 +245,7 @@ a:active {
     padding: 8px;
 }
 
-.widget {
+.container {
     box-shadow: 0px 0px 62px 7px var(--pg-dark-widget);
     display: block;
     width: 100%;
@@ -193,7 +254,7 @@ a:active {
     margin-bottom: 16px;
 }
 
-.widget-title {
+.container-title {
     background-color: var(--pg-dark-widget-title);
     min-height: 32px;
     width: 100%;
@@ -201,12 +262,12 @@ a:active {
     align-items: center;
 }
 
-.widget-title>* {
+.container-title>* {
     flex: 1;
     padding: 8px;
 }
 
-.widget-body {
+.container-body {
     min-height: 128px;
     display: inline-flex;
     flex-direction: column;

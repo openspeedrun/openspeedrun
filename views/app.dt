@@ -2,6 +2,8 @@ extends layout
 
 block init
     - script("/static/app/js/chunk-vendors.js");
+    - css("/static/app/css/chunk-vendors.css");
+    - css("/static/app/css/app.css");
     //- TODO: Add Axios
 
 block postdom

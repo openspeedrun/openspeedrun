@@ -12,25 +12,34 @@
         <div class="spacer" />
 
         <div class="nav-gradin" />
-        <slot name="user-section">
+        <slot name="user-section" v-if="username != null">
             <a class="s-nav-button">
                 <div class="nav-item-wrapper">
                     <div class="avatar-small">
                         <img class="avatar-img" src="https://pbs.twimg.com/profile_images/1149808989963788289/WurVlxeK_400x400.jpg" />
                     </div>
                 </div>
+                &nbsp;
+                <div class="nav-item-wrapper"> {{ username }} </div>
+                &nbsp;
             </a>
         </slot>
-
+        <div name="login-button" v-if="username == null">
+            <button>Login</button>
+        </div>
     </div>
 </template>
 
 <script lang="ts">
     import { Component, Prop, Vue } from 'vue-property-decorator';
+    import store from '@/store';
 
     @Component({
         name: "navbar"
     })
     export default class Navbar extends Vue {
+        get username(): string {
+            return this.$store.state.srstate.username;
+        }
     }
 </script>

@@ -7,11 +7,24 @@
         <p>
             This is the home page for OpenSpeedRun, it's pretty barren right now
         </p>
+
+        <div class="contentBody">
+            <Auth />
+            <br />
+            <Register />
+        </div>
     </div>
 </template>
 
 <script lang="ts">
+import Auth from '@/components/Auth.vue';
+import Register from '@/components/Register.vue';
+
 export default {
-    name: 'Home'
+    name: 'Home',
+    components: {
+        Auth,
+        Register
+    }
 }
 </script>

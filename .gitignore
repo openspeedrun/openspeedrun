@@ -13,6 +13,7 @@ openspeedrun-test-*
 *.o
 *.obj
 *.lst
+osrconfig.sdl
 
 #
 # Node JS stuff

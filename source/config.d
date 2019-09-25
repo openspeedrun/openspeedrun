@@ -17,6 +17,7 @@ module config;
 import vibe.mail.smtp;
 import vibe.data.sdl;
 import vibe.data.serialization;
+import vibe.core.log;
 
 
 /++
@@ -29,7 +30,7 @@ import vibe.data.serialization;
         .\(file).sdl
 +/
 T loadConfigSDLFile(T)(string configName, bool optional = false) {
-    import std.file : exists;
+    import std.file : exists, write;
     import std.path : buildPath;
     import sdlang.parser : parseFile;
 
@@ -47,6 +48,7 @@ T loadConfigSDLFile(T)(string configName, bool optional = false) {
 
         // Throw error if everything fails miserably & this config file not being optional.
         if (!optional) throw new Exception("Could not find configuration file!");
+
     } else version (Windows) {
 
         // If local path version exists, use that
@@ -58,7 +60,10 @@ T loadConfigSDLFile(T)(string configName, bool optional = false) {
         static assert(0, "This operating system is not supported!");
     }
 
-    // Return default state of config
+    logInfo("No configuration was found, a new osrconfig.sdl file has been generated!");
+
+    // Return default state of config, while writing a new config file
+    write(withExt, serializeSDLang!T(T.init).toSDLDocument());
     return T.init;
 }
 
@@ -96,6 +101,10 @@ struct ServerAuthConfig {
 
     @optional
     uint maxPasswordLength = 64;
+
+    string recaptchaSecret = "INSERT_SECRET";
+
+    string recaptchaSiteKey = "INSERT_SITE_KEY";
 }
 
 /++
@@ -167,12 +176,6 @@ struct ServerConfig {
     +/
     @optional
     ServerAuthConfig auth;
-
-    /++
-        Wether the REST API should be enabled
-    +/
-    @optional
-    bool enableREST = true;
 
     /++
         The address to bind the server to

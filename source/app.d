@@ -30,13 +30,11 @@ void main()
     EMAILER = new MailService(CONFIG.smtp.toClientSettings(), CONFIG.smtp.getAddress());
 
     // Set up API routes
-    if (CONFIG.enableREST) {
-        logInfo("Binding REST API...");
-        router.registerRestInterface!IAuthenticationEndpoint(new AuthenticationEndpoint(), "/api/v1");
-        router.registerRestInterface!IUserEndpoint(new UserEndpoint(), "/api/v1");
-        router.registerRestInterface!ICSSEndpoint(new CSSEndpoint(), "/api/v1");
-        router.registerRestInterface!IGameEndpoint(new GameEndpoint(), "/api/v1");
-    }
+    logInfo("Binding REST API...");
+    router.registerRestInterface!IAuthenticationEndpoint(new AuthenticationEndpoint(), "/api/v1");
+    router.registerRestInterface!IUserEndpoint(new UserEndpoint(), "/api/v1");
+    router.registerRestInterface!ICSSEndpoint(new CSSEndpoint(), "/api/v1");
+    router.registerRestInterface!IGameEndpoint(new GameEndpoint(), "/api/v1");
     
 	// Static files
     logInfo("Binding static file server...");

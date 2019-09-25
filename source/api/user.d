@@ -24,33 +24,6 @@ import backend.auth.jwt;
 import config;
 
 /++
-    Data used for authentication (logging in)
-+/
-struct AuthData {
-    /// Password to log in with
-    string password;
-
-    /// Lifetime of the wanted session
-    @optional
-    long lifetime = 0;
-}
-
-/++
-    Data used for registration
-+/
-struct RegData {
-    /// Email for notifications, etc.
-    string email;
-
-    /// Password to log in with
-    string password;
-
-    /// Lifetime of the wanted session
-    @optional
-    long lifetime = 0;
-}
-
-/++
     Endpoint for user managment
 +/
 @path("/auth")
@@ -61,16 +34,18 @@ interface IAuthenticationEndpoint {
         Logs in as bot account
     +/
     @method(HTTPMethod.POST)
-    @path("/login")
-    StatusT!Token login(string authToken);
+    @path("/login/bot")
+    Token login(string authToken);
 
 
     /++
         Logs in as user account
     +/
     @method(HTTPMethod.POST)
-    @path("/login/:username")
-    StatusT!Token login(string _username, string password);
+    @path("/login/user")
+    @bodyParam("username", "username")
+    @bodyParam("password", "password")
+    Token login(string username, string password);
 
     /++
         Verifies a new user allowing them to create/post runs, etc.
@@ -78,7 +53,7 @@ interface IAuthenticationEndpoint {
     @method(HTTPMethod.POST)
     @path("/verify")
     @bodyParam("verifykey")
-    Status verify(string verifykey);
+    string verify(string verifykey);
 
     /++
         Gets the status of a user's JWT token
@@ -86,7 +61,15 @@ interface IAuthenticationEndpoint {
     @method(HTTPMethod.POST)
     @path("/status")
     @before!getJWTToken("token")
-    Status getUserStatus(JWTToken* token);
+    string getUserStatus(JWTToken* token);
+
+
+    /++
+        Gets the rechapta site key.
+    +/
+    @path("/siteKey")
+    @method(HTTPMethod.GET)
+    string siteKey();
 }
 
 /++
@@ -101,7 +84,7 @@ interface IUserEndpoint {
     +/
     @path("/:userId")
     @method(HTTPMethod.GET)
-    StatusT!FEUser user(string _userId);
+    FEUser user(string _userId);
 
     /++
         Endpoint changes user info
@@ -109,7 +92,7 @@ interface IUserEndpoint {
     @path("/update")
     @method(HTTPMethod.GET)
     @before!getJWTToken("token")
-    Status update(JWTToken* token, User data);
+    string update(JWTToken* token, User data);
 
     /++
         === Moderator+ ===
@@ -120,7 +103,7 @@ interface IUserEndpoint {
     @method(HTTPMethod.POST)
     @queryParam("community", "c")
     @before!getJWTToken("token")
-    Status ban(JWTToken* token, string _userId, bool community = true);
+    string ban(JWTToken* token, string _userId, bool community = true);
 
     /++
         === Moderator+ ===
@@ -128,7 +111,7 @@ interface IUserEndpoint {
     @path("/pardon/:userId")
     @method(HTTPMethod.POST)
     @before!getJWTToken("token")
-    Status pardon(JWTToken* token, string _userId);
+    string pardon(JWTToken* token, string _userId);
 
     /++
         Removes user from database with token.
@@ -138,11 +121,12 @@ interface IUserEndpoint {
     +/
     @path("/rmuser")
     @before!getJWTToken("token")
-    Status rmuser(JWTToken* token, string password);
+    string rmuser(JWTToken* token, string password);
 
 }
 
 enum AUTH_FAIL_MSG = "Invalid username or password";
+enum AUTH_VER_FAIL_MSG = "This account hasn't been verified, please check your email. (Even the spam folder)";
 
 /++
     Implementation of auth endpoint
@@ -168,100 +152,107 @@ private:
 
 public:
     /// Login (bot)
-    StatusT!string login(string secret) {
+    Token login(string secret) {
 
         // Get user instance
         User userPtr = User.getFromSecret(secret);
 
         // If user doesn't exist, make error
-        if (userPtr is null) return StatusT!Token.error(StatusCode.StatusInvalid, AUTH_FAIL_MSG);
+        if (userPtr is null) throw new HTTPStatusException(404, AUTH_FAIL_MSG);
 
         // If user hasn't verified their email (and such is turned on), make error
-        if (CONFIG.auth.emailVerification && !userPtr.verified) return StatusT!Token.error(StatusCode.StatusInvalid, AUTH_FAIL_MSG);
+        if (CONFIG.auth.emailVerification && !userPtr.verified) throw new HTTPStatusException(400, AUTH_VER_FAIL_MSG);
 
         // Start new session via JWT token
-        return StatusT!Token(StatusCode.StatusOK, createToken(userPtr));
+        return createToken(userPtr);
     }
 
     /// Login (user)
-    StatusT!string login(string username, string password) {
+    Token login(string username, string password) {
 
         // Get user instance
         User userPtr = User.get(username);
 
         // If user doesn't exist, make error
-        if (userPtr is null) return StatusT!Token.error(StatusCode.StatusInvalid, AUTH_FAIL_MSG);
+        if (userPtr is null) throw new HTTPStatusException(HTTPStatus.unauthorized, AUTH_FAIL_MSG);
 
         // If user hasn't verified their email (and such is turned on), make error
-        if (CONFIG.auth.emailVerification && !userPtr.verified) return StatusT!Token.error(StatusCode.StatusInvalid, AUTH_FAIL_MSG);
+        if (CONFIG.auth.emailVerification && !userPtr.verified) throw new HTTPStatusException(HTTPStatus.internalServerError, AUTH_VER_FAIL_MSG);
 
         // If the password isn't correct, make error
-        //if (!userPtr.auth.verify(password)) return StatusT!Token.error(StatusCode.StatusInvalid, AUTH_FAIL_MSG);
+        //if (!userPtr.auth.verify(password)) throw new HTTPStatusException(HTTPStatus.unauthorized, AUTH_FAIL_MSG);
 
         // Start new session via JWT token
-        return StatusT!Token(StatusCode.StatusOK, createToken(userPtr));
+        return createToken(userPtr);
+    }
+
+    string siteKey() {
+        return CONFIG.auth.recaptchaSiteKey;
     }
 
     /// Verify user
-    Status verify(string verifykey) {
-        return Status(Registration.verifyUser(verifykey) ? StatusCode.StatusOK : StatusCode.StatusDenied);
+    string verify(string verifykey) {
+        if (Registration.verifyUser(verifykey)) return StatusCode.StatusOK;
+        throw new HTTPStatusException(HTTPStatus.unauthorized);
     }
 
-    Status getUserStatus(JWTToken* token) {
-        if (token is null) return Status(StatusCode.StatusDenied);
-        return User.getValidFromJWT(token) ? Status(StatusCode.StatusOK) : Status(StatusCode.StatusInvalid);
+    string getUserStatus(JWTToken* token) {
+        if (token is null) throw new HTTPStatusException(HTTPStatus.unauthorized);
+        return User.getValidFromJWT(token) ? StatusCode.StatusOK : StatusCode.StatusInvalid;
     }
 }
 
 @trusted
 class UserEndpoint : IUserEndpoint {
-    StatusT!FEUser user(string userId) {
+    FEUser user(string userId) {
         User user = User.get(userId);
-        if (user is null) {
-            return StatusT!FEUser.error(StatusCode.StatusNotFound, "user not found!");
-        }
-        return StatusT!FEUser(StatusCode.StatusOK, user.getInfo());
+        if (user is null) throw new HTTPStatusException(404, "user not found!");
+        return user.getInfo();
     }
 
-    Status update(JWTToken* token, User data) {
-        if (token is null) return Status(StatusCode.StatusDenied);
+    string update(JWTToken* token, User data) {
+        if (token is null) throw new HTTPStatusException(HTTPStatus.unauthorized);
 
-        return Status(StatusCode.StatusOK);
+        return StatusCode.StatusOK;
     }
 
-    Status ban(JWTToken* token, string _userId, bool community = true) {
-        if (token is null) return Status(StatusCode.StatusDenied);
+    string ban(JWTToken* token, string _userId, bool community = true) {
+        if (token is null) throw new HTTPStatusException(HTTPStatus.unauthorized);
 
         // Make sure the user has the permissions neccesary
-        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
+        if (!User.getValidFromJWT(token)) throw new HTTPStatusException(HTTPStatus.unauthorized);
         User user = User.getFromJWT(token);
-        if (user.power < Powers.Mod) return Status(StatusCode.StatusDenied);
+        if (user.power < Powers.Mod) throw new HTTPStatusException(HTTPStatus.unauthorized);
 
         User toBan = User.get(_userId);
-        if (!user.canPerformActionOn(toBan)) return Status(StatusCode.StatusDenied);
+        if (!user.canPerformActionOn(toBan)) throw new HTTPStatusException(HTTPStatus.unauthorized);
+
+        if (!toBan.ban(community)) throw new HTTPStatusException(HTTPStatus.internalServerError);
 
         // Ban the user
-        return Status(toBan.ban(community) ? StatusCode.StatusOK : StatusCode.StatusInvalid);
+        return StatusCode.StatusOK;
     }
 
-    Status pardon(JWTToken* token, string _userId) {
-        if (token is null) return Status(StatusCode.StatusDenied);
+    string pardon(JWTToken* token, string _userId) {
+        if (token is null) throw new HTTPStatusException(HTTPStatus.unauthorized);
 
         // Make sure the user has the permissions neccesary
-        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
+        if (!User.getValidFromJWT(token)) throw new HTTPStatusException(HTTPStatus.unauthorized);
         User user = User.getFromJWT(token);
-        if (user.power < Powers.Mod) return Status(StatusCode.StatusDenied);
+        if (user.power < Powers.Mod) throw new HTTPStatusException(HTTPStatus.unauthorized);
 
+        // Get the user and try to perform the action
         User toPardon = User.get(_userId);
-        if (!user.canPerformActionOn(toPardon)) return Status(StatusCode.StatusDenied);
+        if (!user.canPerformActionOn(toPardon)) throw new HTTPStatusException(HTTPStatus.unauthorized);
+        if (!toPardon.unban()) throw new HTTPStatusException(HTTPStatus.internalServerError);
 
-        return Status(toPardon.unban() ? StatusCode.StatusOK : StatusCode.StatusInvalid);
+        return StatusCode.StatusOK;
     }
 
 
-    Status rmuser(JWTToken* token, string password) {
-        if (token is null) return Status(StatusCode.StatusDenied);
+    string rmuser(JWTToken* token, string password) {
+        if (token is null) throw new HTTPStatusException(HTTPStatus.unauthorized);
 
-        return Status(StatusCode.StatusOK);
+        return StatusCode.StatusOK;
     }
 }

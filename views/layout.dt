@@ -45,6 +45,7 @@ html
 
         center
             p="OpenSpeedRun © Clipsey"
+            p(style="font-size: 12px")="This site is protected by reCAPTCHA, Google's Privacy Policy and Terms of Service apply."
             a(href="https://github.com/openspeedrun/openspeedrun")="Fork on GitHub!"
         
         //- Initialize app

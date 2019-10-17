@@ -235,16 +235,12 @@ static JWTToken* getJWTToken(HTTPServerRequest req, HTTPServerResponse res) {
         immutable(string) header = req.headers.get("Authorization", null);
 
         // Header does not exist
-        if (header is null) return null;
+        if (header is null) throw new HTTPStatusException(HTTPStatus.unauthorized, "Not logged in");
 
-        if (!header.startsWith("Bearer ")) throw new Exception("Invalid authorization header!");
+        if (!header.startsWith("Bearer ")) throw new HTTPStatusException(HTTPStatus.unauthorized, "Invalid bearer token!");
 
         // Verify token
         JWTToken* token = new JWTToken(header[7..$]);
         return token.verify() ? token : null;
-    } catch (Exception ex) {
-        import vibe.core.log : logError, logInfo;
-        logError("%s", ex.msg);
-        return null;
     }
 } 

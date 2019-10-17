@@ -231,16 +231,15 @@ bool verifySignature(JWTToken token, ubyte[] secret) {
 import vibe.http.server;
 static JWTToken* getJWTToken(HTTPServerRequest req, HTTPServerResponse res) {
     import std.algorithm.searching : startsWith;
-    try {
-        immutable(string) header = req.headers.get("Authorization", null);
+    immutable(string) header = req.headers.get("Authorization", null);
 
-        // Header does not exist
-        if (header is null) throw new HTTPStatusException(HTTPStatus.unauthorized, "Not logged in");
+    // Header does not exist
+    if (header is null) throw new HTTPStatusException(HTTPStatus.unauthorized, "Not logged in");
 
-        if (!header.startsWith("Bearer ")) throw new HTTPStatusException(HTTPStatus.unauthorized, "Invalid bearer token!");
+    if (!header.startsWith("Bearer ")) throw new HTTPStatusException(HTTPStatus.unauthorized, "Invalid bearer token!");
 
-        // Verify token
-        JWTToken* token = new JWTToken(header[7..$]);
-        return token.verify() ? token : null;
-    }
+    // Verify token
+    JWTToken* token = new JWTToken(header[7..$]);
+    return token.verify() ? token : null;
+
 } 

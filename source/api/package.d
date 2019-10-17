@@ -16,10 +16,23 @@
 module api;
 
 public import api.common;
+
+/*
+    User and Auth
+*/
+public import api.auth;
 public import api.user;
-public import api.run;
-public import api.game;
 public import api.runner;
 public import api.admin;
+
+/*
+    Categories
+*/
 public import api.category;
+
+/*
+    Games & Runs
+*/
+public import api.run;
+public import api.game;
 public import api.css;

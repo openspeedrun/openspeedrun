@@ -14,7 +14,10 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 +/
 module api.common;
-import vibe.data.serialization;
+public import vibe.data.serialization;
+public import backend.auth.jwt;
+public import vibe.web.rest;
+public import vibe.http.common;
 
 /++
     Enum of valid status codes that can be returned from the API

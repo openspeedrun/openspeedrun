@@ -14,7 +14,6 @@
                         <label class="text-left" style="padding-right: 4px;">{{ username }}</label>
                         <figure class="avatar">
                             <img src="https://pbs.twimg.com/profile_images/1149808989963788289/WurVlxeK_400x400.jpg">
-                            <i class="avatar-presence online"></i>
                         </figure>
                     </a>
 
@@ -26,7 +25,7 @@
                             </a>
                         </li>
                         <li class="menu-item">
-                            <a href="#" v-on:keyup.enter="logout" v-on:click="logout">
+                            <a href="#" @click="logout">
                                 Logout
                             </a>
                         </li>
@@ -37,9 +36,9 @@
             <div class="btn btn-link btn-lg" @click="showLogin" v-if="username == null">Log In</div>
 
             <LoginModal ref="loginModal">
-                <a class="btn btn-link" @click="showRegister">Don't have an account?</a>
+                <a class="btn btn-link" @click="showRegister" v-if="allowRegistrations">Don't have an account?</a>
             </LoginModal>
-            <RegisterModal ref="registerModal" />
+            <RegisterModal ref="registerModal" v-if="allowRegistrations" />
         </section>
     </header>
 </template>
@@ -49,11 +48,13 @@
     import LoginModal from '@/components/modals/LoginModal.vue';
     import RegisterModal from '@/components/modals/RegisterModal.vue';
     import store from '@/store';
+    import { client } from '@/client';
 
     @Component({name: "navbar", components: { LoginModal, RegisterModal }})
     export default class Navbar extends Vue {
         @Ref() loginModal: LoginModal;
         @Ref() registerModal: RegisterModal;
+        @Prop({}) allowRegistrations: boolean;
 
         get username(): string {
             return this.$store.state.srstate.username;
@@ -74,6 +75,12 @@
 
         public logout() {
             this.$store.commit('setToken', null);
+        }
+
+        mounted() {
+            client.get("/api/v1/auth/regstatus").then(response => {
+                this.allowRegistrations = response.data as boolean; 
+            });
         }
     }
 </script>

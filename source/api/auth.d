@@ -14,6 +14,7 @@ enum REG_EMAIL_INVALID = "Invalid email address";
 enum REG_TAKEN = "Username or Email taken";
 enum REG_RC_SCORE = "Spam bots not allowed.";
 enum REG_CREATE_ERROR = "User could not be created for unknown reason. Please contact the developers.";
+enum REG_DISABLED = "User registrations have been disabled.";
 
 /++
     Endpoint for user managment
@@ -51,6 +52,13 @@ interface IAuthenticationEndpoint {
     @bodyParam("password", "password")
     @bodyParam("rcToken", "rcToken")
     string register(string username, string email, string password, string rcToken);
+
+    /**
+        Gets wether the site is allowing registrations
+    */
+    @method(HTTPMethod.GET)
+    @path("/regstatus")
+    bool registrationOpen();
 
     /++
         Verifies a new user allowing them to create/post runs, etc.
@@ -137,6 +145,8 @@ public:
     string register(string username, string email, string password, string rcToken) {
         import vibe.utils.validation : validateEmail;
 
+        if (!CONFIG.auth.allowSignups) throw new HTTPStatusException(HTTPStatus.badRequest, REG_DISABLED);
+
         /*
             The big block of validation
         */
@@ -173,6 +183,11 @@ public:
         // Return ok_verify if the user needs to verify their email, return ok if already verified
         if (CONFIG.auth.emailVerification) return "ok_verify";
         return createToken(user);
+    }
+
+    /// Check wether registrations are open
+    bool registrationOpen() {
+        return CONFIG.auth.allowSignups;
     }
 
     string siteKey() {

@@ -142,7 +142,7 @@
                 switch(response.status) {
                     case 200:
                         console.log(response.data);
-                        if (response.data.data as string == "ok") {
+                        if (response.data.data as string == "ok_verify") {
                             alert("Check your inbox for a verification email.");
                             this.close();
                         } else {

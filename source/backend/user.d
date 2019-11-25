@@ -151,7 +151,7 @@ class User {
         if (emailTaken(email)) throw new TakenException("Email");
         
         string properUsername = formatId(username);
-        if (properUsername == "") throw new InvalidFmtException("username", ExpectedIDFmt);
+        if (properUsername.length == 0) throw new InvalidFmtException("username", ExpectedIDFmt);
 
         // Setup user
         User userToAdd = new User(properUsername, email, UserAuth(password));

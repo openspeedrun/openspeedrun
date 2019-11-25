@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <link rel="shortcut icon" href="/static/assets/favicon.png" />
     <Navbar />
     <transition name="fade" mode="out-in">
       <router-view />

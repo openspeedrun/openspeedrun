@@ -1,5 +1,5 @@
-- void css(string file)
-    link(rel='stylesheet', type='text/css', href=file)
+- void css(string file, string integ = "", string origin = "anonymous")
+    link(rel='stylesheet', type='text/css', href=file, integrity=integ, crossorigin=origin)
 
 - void script(string file, string cross="anonymous")
     script(src=file, crossorigin=cross)

@@ -164,7 +164,7 @@ struct ServerEmailSettings {
     Struct containing the server configuration
 +/
 struct ServerConfig {
-@trusted:
+@safe:
     /++
         Settings for the email server
     +/

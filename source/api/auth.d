@@ -7,6 +7,14 @@ import config;
 enum AUTH_FAIL_MSG = "Invalid username or password";
 enum AUTH_VER_FAIL_MSG = "This account hasn't been verified, please check your email. (Even the spam folder)";
 
+enum REG_EMPTY_UNAME = "Username can not be empty";
+enum REG_EMPTY_PASSWD = "Password can not be empty";
+enum REG_EMPTY_EMAIL = "Email can not be empty";
+enum REG_EMAIL_INVALID = "Invalid email address";
+enum REG_TAKEN = "Username or Email taken";
+enum REG_RC_SCORE = "Spam bots not allowed.";
+enum REG_CREATE_ERROR = "User could not be created for unknown reason. Please contact the developers.";
+
 /++
     Endpoint for user managment
 +/
@@ -29,6 +37,20 @@ interface IAuthenticationEndpoint {
     @bodyParam("username", "username")
     @bodyParam("password", "password")
     Token login(string username, string password);
+
+    /++
+        Register a new account
+
+        returns ok_verify if account needs email verification
+        returns a token if the account is verified and ready
+    +/
+    @method(HTTPMethod.POST)
+    @path("/register")
+    @bodyParam("username", "username")
+    @bodyParam("email", "email")
+    @bodyParam("password", "password")
+    @bodyParam("rcToken", "rcToken")
+    string register(string username, string email, string password, string rcToken);
 
     /++
         Verifies a new user allowing them to create/post runs, etc.
@@ -67,7 +89,6 @@ private:
         token.payload = Json.emptyObject();
         token.payload["username"] = user.username;
         token.payload["power"] = user.power;
-        token.payload["pronouns"] = serializeToJson(user.pronouns);
 
         // TODO: Make token expire.
 
@@ -106,10 +127,52 @@ public:
         if (CONFIG.auth.emailVerification && !userPtr.verified) throw new HTTPStatusException(HTTPStatus.internalServerError, AUTH_VER_FAIL_MSG);
 
         // If the password isn't correct, make error
-        //if (!userPtr.auth.verify(password)) throw new HTTPStatusException(HTTPStatus.unauthorized, AUTH_FAIL_MSG);
+        if (!userPtr.auth.verify(password)) throw new HTTPStatusException(HTTPStatus.unauthorized, AUTH_FAIL_MSG);
 
         // Start new session via JWT token
         return createToken(userPtr);
+    }
+
+    /// Register
+    string register(string username, string email, string password, string rcToken) {
+        import vibe.utils.validation : validateEmail;
+
+        /*
+            The big block of validation
+        */
+
+        if (User.get(username) !is null || User.get(email) !is null) {
+            throw new HTTPStatusException(HTTPStatus.badRequest, REG_TAKEN);
+        }
+
+        if (username.length == 0) throw new HTTPStatusException(HTTPStatus.badRequest, REG_EMPTY_UNAME);
+        if (email.length == 0) throw new HTTPStatusException(HTTPStatus.badRequest, REG_EMPTY_EMAIL);
+        if (password.length == 0) throw new HTTPStatusException(HTTPStatus.badRequest, REG_EMPTY_PASSWD);
+        
+        // Email validation
+        try {
+            validateEmail(email, 128);
+        } catch (Exception) {
+            throw new HTTPStatusException(HTTPStatus.badRequest, REG_EMAIL_INVALID);
+        }
+
+        User user;
+
+        // Make sure the account gets created
+        try {
+            user = User.register(username, email, password);
+            if (user is null) {
+                throw new HTTPStatusException(HTTPStatus.internalServerError, REG_CREATE_ERROR);
+            }
+        } catch(HTTPStatusException ex) {
+            throw ex;
+        } catch(Exception ex) {
+            throw new HTTPStatusException(HTTPStatus.internalServerError, ex.msg);
+        }
+        
+        // Return ok_verify if the user needs to verify their email, return ok if already verified
+        if (CONFIG.auth.emailVerification) return "ok_verify";
+        return createToken(user);
     }
 
     string siteKey() {

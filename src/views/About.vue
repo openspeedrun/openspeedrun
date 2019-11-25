@@ -1,5 +1,14 @@
 <template>
-    <div class="content">
+    <div class="hero">
+        <h1>About OSR</h1>
+        <p>
+            OpenSpeedRun is an open source speedrunning leaderboard.
+            <br />
+            The project is still in development and a lot of features will be missing for a bit.
+        </p>
+    </div>
+
+    <!-- <div class="content">
         <link rel="shortcut icon" href="/static/assets/favicon.png" />
         <title>OpenSpeedRun - About</title>
 
@@ -35,7 +44,7 @@
 
         <div class="contentBodyRight" />
 
-    </div>
+    </div> -->
 </template>
 
 <script lang="ts">

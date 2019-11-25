@@ -4,6 +4,7 @@ block init
     - script("/static/app/js/chunk-vendors.js");
     - css("/static/app/css/chunk-vendors.css");
     - css("/static/app/css/app.css");
+    - css("https://unpkg.com/spectre.css/dist/spectre.min.css");
     //- TODO: Add Axios
 
 block postdom

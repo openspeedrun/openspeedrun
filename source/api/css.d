@@ -29,7 +29,11 @@ import backend.auth.jwt;
 
 
 @path("/css")
+@requiresAuth
 interface ICSSEndpoint {
+
+    mixin implemementJWT;
+
     /++
         Gets the user-set CSS.
 
@@ -39,6 +43,7 @@ interface ICSSEndpoint {
     +/
     @method(HTTPMethod.GET)
     @path("/:gameId")
+    @noAuth
     string css(string _gameId, bool showPending = false);
 
     /++
@@ -48,8 +53,8 @@ interface ICSSEndpoint {
     +/
     @method(HTTPMethod.POST)
     @path("/:gameId")
-    @before!getJWTToken("token")
-    Status setCSS(JWTToken* token, string _gameId, string data);
+    @auth(Role.User)
+    Status setCSS(JWTAuthInfo token, string _gameId, string data);
 
     /++
         === Moderator+ ===
@@ -59,8 +64,8 @@ interface ICSSEndpoint {
     +/
     @method(HTTPMethod.POST)
     @path("/accept/:gameId")
-    @before!getJWTToken("token")
-    Status acceptCSS(JWTToken* token, string _gameId);
+    @auth(Role.Mod)
+    Status acceptCSS(JWTAuthInfo token, string _gameId);
 
     /++
         === Moderator+ ===
@@ -71,8 +76,8 @@ interface ICSSEndpoint {
     +/
     @method(HTTPMethod.POST)
     @path("/deny/:gameId")
-    @before!getJWTToken("token")
-    Status denyCSS(JWTToken* token, string _gameId);
+    @auth(Role.Mod)
+    Status denyCSS(JWTAuthInfo token, string _gameId);
 
     /++
         === Moderator+ ===
@@ -83,11 +88,15 @@ interface ICSSEndpoint {
     +/
     @method(HTTPMethod.POST)
     @path("/wipe/:gameId")
-    @before!getJWTToken("token")
-    Status wipeCSS(JWTToken* token, string _gameId);
+    @auth(Role.Mod)
+    Status wipeCSS(JWTAuthInfo token, string _gameId);
 }
 
 class CSSEndpoint : ICSSEndpoint {
+public:
+
+    mixin implemementJWT;
+
     string css(string _gameId, bool showPending = false) {
         // Make sure Game exists.
         if (Game.get(_gameId) is null) return StatusCode.StatusInvalid;
@@ -98,15 +107,12 @@ class CSSEndpoint : ICSSEndpoint {
         return showPending ? css.css : css.approvedCSS;
     }
 
-    Status setCSS(JWTToken* token, string _gameId, string data) {
+    Status setCSS(JWTAuthInfo token, string _gameId, string data) {
         import std.algorithm.searching : canFind;
 
-        // Make sure the token is valid
-        if (token is null) return Status(StatusCode.StatusDenied);
-
         // Make sue that the user is valid
-        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
-        User user = User.getFromJWT(token);
+        if (!User.getValidFromJWT(token.token)) return Status(StatusCode.StatusInvalid);
+        User user = User.getFromJWT(token.token);
 
         // Make sure the game exists
         Game game = Game.get(_gameId);
@@ -131,17 +137,10 @@ class CSSEndpoint : ICSSEndpoint {
         return Status(StatusCode.StatusOK);
     }
 
-    Status acceptCSS(JWTToken* token, string _gameId) {
-        if (token is null) return Status(StatusCode.StatusDenied);
-        
+    Status acceptCSS(JWTAuthInfo token, string _gameId) {
+
         // Make sure the game exists
         if (Game.get(_gameId) is null) return Status(StatusCode.StatusInvalid);
-
-        // Make sure the user has the permissions to accept the CSS
-        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
-        User user = User.getFromJWT(token);
-        if (user.power < Powers.Mod) 
-            return Status(StatusCode.StatusDenied);
 
         CSS css = CSS.get(_gameId);
         if (css is null) return Status(StatusCode.StatusNotFound);
@@ -150,17 +149,10 @@ class CSSEndpoint : ICSSEndpoint {
         return Status(StatusCode.StatusInvalid);
     }
 
-    Status denyCSS(JWTToken* token, string _gameId) {
-        if (token is null) return Status(StatusCode.StatusDenied);
-        
+    Status denyCSS(JWTAuthInfo token, string _gameId) {
+
         // Make sure the game exists
         if (Game.get(_gameId) is null) return Status(StatusCode.StatusInvalid);
-
-        // Make sure the user has the permissions to accept the CSS
-        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
-        User user = User.getFromJWT(token);
-        if (user.power < Powers.Mod) 
-            return Status(StatusCode.StatusDenied);
 
         CSS css = CSS.get(_gameId);
         if (css is null) return Status(StatusCode.StatusNotFound);
@@ -169,16 +161,10 @@ class CSSEndpoint : ICSSEndpoint {
         return Status(StatusCode.StatusInvalid);
     }
 
-    Status wipeCSS(JWTToken* token, string _gameId) {
-        if (token is null) return Status(StatusCode.StatusDenied);
-        
+    Status wipeCSS(JWTAuthInfo token, string _gameId) {
+
         // Make sure the game exists
         if (Game.get(_gameId) is null) return Status(StatusCode.StatusInvalid);
-
-        // Make sure the user has the permissions to accept the CSS
-        User user = User.getFromJWT(token);
-        if (user.power < Powers.Mod) 
-            return Status(StatusCode.StatusDenied);
 
         CSS.wipe(_gameId);
 

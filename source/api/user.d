@@ -23,22 +23,37 @@ import config;
     User endpoint for user settings
 +/
 @path("/users")
+@requiresAuth
 interface IUserEndpoint {
+
+    mixin implemementJWT;
 
     /++
         Gets user info
     +/
     @path("/:userId")
     @method(HTTPMethod.GET)
+    @noAuth
     FEUser user(string _userId);
+
+    /++
+        Search for games
+    +/
+    @method(HTTPMethod.GET)
+    @path("/search/:page")
+    @queryParam("pgCount", "pgCount")
+    @queryParam("showPending", "showPending")
+    @queryParam("query", "query")
+    @noAuth
+    FEUser[] search(string query, int _page = 0, int pgCount = 20, bool showPending = false);
 
     /++
         Endpoint changes user info
     +/
     @path("/update")
     @method(HTTPMethod.GET)
-    @before!getJWTToken("token")
-    string update(JWTToken* token, User data);
+    @auth(Role.User)
+    string update(JWTAuthInfo token, User data);
 
     /++
         === Moderator+ ===
@@ -48,16 +63,16 @@ interface IUserEndpoint {
     @path("/ban/:userId")
     @method(HTTPMethod.POST)
     @queryParam("community", "c")
-    @before!getJWTToken("token")
-    string ban(JWTToken* token, string _userId, bool community = true);
+    @auth(Role.Mod)
+    string ban(JWTAuthInfo token, string _userId, bool community = true);
 
     /++
         === Moderator+ ===
     +/
     @path("/pardon/:userId")
     @method(HTTPMethod.POST)
-    @before!getJWTToken("token")
-    string pardon(JWTToken* token, string _userId);
+    @auth(Role.Mod)
+    string pardon(JWTAuthInfo token, string _userId);
 
     /++
         Removes user from database with token.
@@ -66,32 +81,30 @@ interface IUserEndpoint {
         Verify with password!
     +/
     @path("/rmuser")
-    @before!getJWTToken("token")
-    string rmuser(JWTToken* token, string password);
+    @auth(Role.User)
+    string rmuser(JWTAuthInfo token, string password);
 
 }
 
-class UserEndpoint : IUserEndpoint {
+@requiresAuth
+class UserEndpoint : AuthEndpoint, IUserEndpoint {
 public:
+
     FEUser user(string userId) {
         User user = User.get(userId);
         if (user is null) throw new HTTPStatusException(404, "user not found!");
         return user.getInfo();
     }
 
-    string update(JWTToken* token, User data) {
-        if (token is null) throw new HTTPStatusException(HTTPStatus.unauthorized);
-
+    string update(JWTAuthInfo token, User data) {
         return StatusCode.StatusOK;
     }
 
-    string ban(JWTToken* token, string _userId, bool community = true) {
-        if (token is null) throw new HTTPStatusException(HTTPStatus.unauthorized);
+    string ban(JWTAuthInfo token, string _userId, bool community = true) {
 
         // Make sure the user has the permissions neccesary
-        if (!User.getValidFromJWT(token)) throw new HTTPStatusException(HTTPStatus.unauthorized);
-        User user = User.getFromJWT(token);
-        if (user.power < Powers.Mod) throw new HTTPStatusException(HTTPStatus.unauthorized);
+        if (!User.getValidFromJWT(token.token)) throw new HTTPStatusException(HTTPStatus.unauthorized);
+        User user = User.getFromJWT(token.token);
 
         User toBan = User.get(_userId);
         if (!user.canPerformActionOn(toBan)) throw new HTTPStatusException(HTTPStatus.unauthorized);
@@ -102,12 +115,10 @@ public:
         return StatusCode.StatusOK;
     }
 
-    string pardon(JWTToken* token, string _userId) {
-        if (token is null) throw new HTTPStatusException(HTTPStatus.unauthorized);
-
+    string pardon(JWTAuthInfo token, string _userId) {
         // Make sure the user has the permissions neccesary
-        if (!User.getValidFromJWT(token)) throw new HTTPStatusException(HTTPStatus.unauthorized);
-        User user = User.getFromJWT(token);
+        if (!User.getValidFromJWT(token.token)) throw new HTTPStatusException(HTTPStatus.unauthorized);
+        User user = User.getFromJWT(token.token);
         if (user.power < Powers.Mod) throw new HTTPStatusException(HTTPStatus.unauthorized);
 
         // Get the user and try to perform the action
@@ -118,10 +129,14 @@ public:
         return StatusCode.StatusOK;
     }
 
-
-    string rmuser(JWTToken* token, string password) {
-        if (token is null) throw new HTTPStatusException(HTTPStatus.unauthorized);
-
+    @auth(Role.User)
+    string rmuser(JWTAuthInfo token, string password) {
+        
+        // Make sure the user has the permissions neccesary
+        if (!User.getValidFromJWT(token.token)) throw new HTTPStatusException(HTTPStatus.unauthorized);
+        User user = User.getFromJWT(token.token);
+        if (!user.auth.verify(password)) throw new HTTPStatusException(HTTPStatus.unauthorized);
+        user.deleteUser();
         return StatusCode.StatusOK;
     }
 }

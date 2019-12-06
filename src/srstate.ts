@@ -5,11 +5,13 @@ import { Module as Mod } from 'vuex';
 export default class SRState extends VuexModule {
     token: string | null;
     username: string | null;
+    profile_picture: string | null;
 
     constructor(module: Mod<ThisType<any>, any>) {
         super(module)
         this.token = localStorage.getItem('auth');
         this.username = localStorage.getItem('username');
+        this.profile_picture = localStorage.getItem('profile_picture');
     }
 
     @Mutation setToken(token: string | null) { 
@@ -19,6 +21,7 @@ export default class SRState extends VuexModule {
         } else {
             localStorage.removeItem('auth');
             localStorage.removeItem('username')
+            localStorage.removeItem('profile_picture')
             this.username = null;
         }
     }
@@ -26,5 +29,10 @@ export default class SRState extends VuexModule {
     @Mutation setUsername(username: string | null) {
         localStorage.setItem('username', username as string);
         this.username = username;
+    }
+
+    @Mutation setProfilePicture(picture: string | null) {
+        localStorage.setItem('profile_picture', picture as string);
+        this.profile_picture = picture;
     }
 } 

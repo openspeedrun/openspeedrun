@@ -54,6 +54,7 @@
 <script lang="ts">
     import { Component, Prop, Vue } from 'vue-property-decorator';
     import { client } from '@/client';
+    import { Pronouns, Social, Runner, UserInfo } from '@/types';
 
     interface AuthReq {
         username: string;
@@ -101,6 +102,15 @@
                     } else {
                         this.$store.commit('setToken', response.data as string);
                         this.$store.commit('setUsername', this.username as string);
+
+                        // Get extra user data
+                        client.get("/api/v1/users/"+this.username).then(response => {
+                            if (response.status == 200) {
+                                let userInfo: UserInfo = response.data as UserInfo;
+                                this.$store.commit('setProfilePicture', userInfo.profile_picture as string);
+                            }
+                        });
+
                         this.close();
                     }
             });

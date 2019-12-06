@@ -23,6 +23,7 @@ export interface Runner {
 export interface UserInfo {
     id: string;
     display_name: string;
+    profile_picture: string;
     verified: boolean;
     pronouns: Pronouns;
 }

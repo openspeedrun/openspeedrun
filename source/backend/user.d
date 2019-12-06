@@ -140,6 +140,18 @@ Pronouns theyThemPronouns() {
     return Pronouns("they", "them", "their");
 }
 
+struct Social {
+    /**
+        Name of social site
+    */
+    string name;
+
+    /**
+        Link to social site
+    */
+    string link;
+}
+
 /++
     A user
 +/
@@ -272,6 +284,13 @@ class User {
     string displayName;
 
     /++
+        Link to profile picture (in CDN)
+    +/
+    @name("profile_picture")
+    @optional
+    string profilePicture;
+
+    /++
         Wether the user has verified their email
     +/
     @name("verified")
@@ -300,6 +319,24 @@ class User {
     @name("pronouns")
     @optional
     Pronouns pronouns;
+
+    /++
+        country code for the country of origin
+    +/
+    @name("country")
+    string country;
+
+    /++
+        Account flavourtext
+    +/
+    @name("flavour_text")
+    string flavourText;
+
+    /**
+        Social places
+    */
+    @name("socials")
+    Social[] socials;
 
     /++
         For serialized instances
@@ -386,7 +423,7 @@ class User {
     }
 
     FEUser getInfo() {
-        return FEUser(username, displayName, verified, pronouns);
+        return FEUser(username, displayName, profilePicture, verified, pronouns);
     }
 }
 
@@ -405,6 +442,12 @@ struct FEUser {
     +/
     @name("display_name")
     string displayName;
+
+    /++
+        User's profile picture
+    +/
+    @name("profile_picture")
+    string profilePicture;
 
     /++
         Wether the user has verified their email

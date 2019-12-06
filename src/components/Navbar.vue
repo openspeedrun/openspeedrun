@@ -13,7 +13,7 @@
                     <a href="#" class="btn btn-link btn-lg dropdown-toggle" tabindex="0">
                         <label class="text-left" style="padding-right: 4px;">{{ username }}</label>
                         <figure class="avatar">
-                            <img src="https://pbs.twimg.com/profile_images/1149808989963788289/WurVlxeK_400x400.jpg">
+                            <img v-bind:src="profile_picture" alt="Profile Picture">
                         </figure>
                     </a>
 
@@ -58,6 +58,10 @@
 
         get username(): string {
             return this.$store.state.srstate.username;
+        }
+
+        get profile_picture(): string {
+            return this.$store.state.srstate.profile_picture;
         }
 
         public showLogin() {

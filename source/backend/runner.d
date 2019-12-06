@@ -17,39 +17,12 @@ module backend.runner;
 import vibe.data.serialization;
 import db;
 
-struct Social {
-    /**
-        Name of social site
-    */
-    string name;
-
-    /**
-        Link to social site
-    */
-    string link;
-}
-
 class Runner {
     /++
         The user the runner object is attached to
     +/
     @name("_id")
     string user;
-
-    /++
-        country code for the country of origin
-    +/
-    string country;
-
-    /++
-        Account flavourtext
-    +/
-    string flavourText;
-
-    /**
-        Social places
-    */
-    Social[] social;
 
     static Runner get(string id) {
         return DATABASE["speedrun.runners"].findOne!Runner(["_id": id]);

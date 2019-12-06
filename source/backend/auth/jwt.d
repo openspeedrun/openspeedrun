@@ -7,6 +7,7 @@ import std.base64 : Base64URLNoPadding;
 import secured.hash : HashAlgorithm;
 import std.format : format;
 import std.datetime;
+public import vibe.web.auth;
 
 // Following is some helper functions to make sure the implementation is consistent
 
@@ -229,17 +230,66 @@ bool verifySignature(JWTToken token, ubyte[] secret) {
 }
 
 import vibe.http.server;
-static JWTToken* getJWTToken(HTTPServerRequest req, HTTPServerResponse res) {
-    import std.algorithm.searching : startsWith;
-    immutable(string) header = req.headers.get("Authorization", null);
+import vibe.core.log : logInfo;
 
-    // Header does not exist
-    if (header is null) throw new HTTPStatusException(HTTPStatus.unauthorized, "Not logged in");
 
-    if (!header.startsWith("Bearer ")) throw new HTTPStatusException(HTTPStatus.unauthorized, "Invalid bearer token!");
+/**
+    JWT Auth Info
+*/
+import backend.user;
+static struct JWTAuthInfo {
+    User user;
+    JWTToken* token;
 
-    // Verify token
-    JWTToken* token = new JWTToken(header[7..$]);
-    return token.verify() ? token : null;
+    bool isWebMaster() {
+        return user.power == Powers.WebMaster;
+    }
 
-} 
+    bool isAdmin() {
+        return user.power >= Powers.Admin;
+    }
+
+    bool isMod() {
+        return user.power >= Powers.Mod;
+    }
+
+    bool isUser() {
+        return user.power >= Powers.User;
+    }
+}
+
+/**
+    Implements JWT check
+*/
+template implemementJWT() {
+    import vibe.web.web : noRoute;
+    import vibe.http.server : HTTPServerRequest, HTTPServerResponse;
+    import vibe.core.log : logInfo;
+    import backend.user : User;
+
+    @noRoute
+    @trusted
+    static JWTAuthInfo authenticate(scope HTTPServerRequest req, scope HTTPServerResponse res) {
+        import std.algorithm.searching : startsWith;
+        immutable(string) header = req.headers.get("Authorization", null);
+
+        // Header does not exist
+        if (header is null) throw new HTTPStatusException(HTTPStatus.unauthorized, "Not logged in");
+
+        if (!header.startsWith("Bearer ")) throw new HTTPStatusException(HTTPStatus.unauthorized, "Invalid bearer token!");
+
+        // Verify token
+        auto token = new JWTToken(header[7..$]);
+        if (!token.verify()) throw new HTTPStatusException(HTTPStatus.forbidden, "Invalid token (tamper protection)");
+
+        // Token is fine, continue on.
+        return JWTAuthInfo(User.getFromJWT(token), token);
+    }
+}
+
+/**
+    Base class that implements JWT checks
+*/
+class AuthEndpoint {
+    mixin implemementJWT;
+}

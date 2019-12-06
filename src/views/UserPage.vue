@@ -110,7 +110,7 @@
 
         // TODO: Make this not be a pre-defined value
         get avatarURL(): string {
-            return "https://pbs.twimg.com/profile_images/1149808989963788289/WurVlxeK_400x400.jpg";
+            return this.userInfo.profile_picture;
         }
 
         mounted() {
@@ -123,16 +123,6 @@
                 }
                 this.isLoading = false;
             });
-
-            // Make the API call
-            // client.get("/api/v1/users/"+this.username).then(response => {
-            //         console.log(response.data);
-            //         if (response.status == 200) {
-            //             this.userInfo = response.data as UserInfo;
-            //             this.userFound = true;
-            //         }
-            //         this.isLoading = false;
-            // });
         }
         
     }

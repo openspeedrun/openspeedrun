@@ -27,12 +27,16 @@ struct GameCreationData {
 }
 
 @path("/games")
+@requiresAuth
 interface IGameEndpoint {
+    mixin implemementJWT;
+
     /++
         Get game info
     +/
     @method(HTTPMethod.GET)
     @path("/:gameId")
+    @noAuth
     StatusT!Game game(string _gameId);
 
     /++
@@ -43,6 +47,7 @@ interface IGameEndpoint {
     @queryParam("pgCount", "pgCount")
     @queryParam("showPending", "showPending")
     @queryParam("query", "query")
+    @noAuth
     StatusT!(Game[]) search(string query, int _page = 0, int pgCount = 20, bool showPending = false);
 
     /++
@@ -51,16 +56,16 @@ interface IGameEndpoint {
     @method(HTTPMethod.POST)
     @path("/:gameId")
     @bodyParam("data")
-    @before!getJWTToken("token")
-    Status createGame(JWTToken* token, string _gameId, GameCreationData data);
+    @auth(Role.User)
+    Status createGame(JWTAuthInfo token, string _gameId, GameCreationData data);
 
     /++
         Promotes a user to moderator of the game
     +/
     @method(HTTPMethod.POST)
     @path("/:gameId/promote/:userId/:rank")
-    @before!getJWTToken("token")
-    Status setRank(JWTToken* token, string _gameId, string _userId, int _rank);
+    @auth(Role.User)
+    Status setRank(JWTAuthInfo token, string _gameId, string _userId, int _rank);
 
     /++
         === Moderator+ ===
@@ -69,8 +74,8 @@ interface IGameEndpoint {
     +/
     @method(HTTPMethod.POST)
     @path("/accept/:gameId")
-    @before!getJWTToken("token")
-    Status acceptGame(JWTToken* token, string _gameId);
+    @auth(Role.Mod)
+    Status acceptGame(JWTAuthInfo token, string _gameId);
 
     /++
         === Moderator+ ===
@@ -81,11 +86,12 @@ interface IGameEndpoint {
     +/
     @method(HTTPMethod.POST)
     @path("/deny/:gameId")
-    @before!getJWTToken("token")
-    Status denyGame(JWTToken* token, string _gameId);
+    @auth(Role.Mod)
+    Status denyGame(JWTAuthInfo token, string _gameId);
 }
 
 class GameEndpoint : IGameEndpoint {
+public:
 
     StatusT!Game game(string _gameId) {
         Game game = Game.get(_gameId);
@@ -101,14 +107,11 @@ class GameEndpoint : IGameEndpoint {
         return StatusT!(Game[])(StatusCode.StatusOK, games);
     }
 
-    Status createGame(JWTToken* token, string _gameId, GameCreationData data) {
-        // Make sure the token is valid
-        if (token is null) 
-            return Status(StatusCode.StatusDenied);
+    Status createGame(JWTAuthInfo token, string _gameId, GameCreationData data) {
 
         // Make sue that the user is valid
-        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
-        User user = User.getFromJWT(token);
+        if (!User.getValidFromJWT(token.token)) return Status(StatusCode.StatusInvalid);
+        User user = User.getFromJWT(token.token);
 
 
         // Make sure Game DOES NOT exists.
@@ -119,13 +122,11 @@ class GameEndpoint : IGameEndpoint {
         return game !is null ? Status(StatusCode.StatusOK) : Status(StatusCode.StatusInvalid);
     }
 
-    Status setRank(JWTToken* token, string _gameId, string _userId, int _rank) {
-        // Make sure the token is valid
-        if (token is null) 
-            return Status(StatusCode.StatusDenied);
+    @auth(Role.User)
+    Status setRank(JWTAuthInfo token, string _gameId, string _userId, int _rank) {
 
         // Make sue that the user is valid
-        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
+        if (!User.getValidFromJWT(token.token)) return Status(StatusCode.StatusInvalid);
 
         // Make sure the game exists
         if (Game.get(_gameId) is null) return Status(StatusCode.StatusInvalid);
@@ -134,39 +135,26 @@ class GameEndpoint : IGameEndpoint {
         return Status(StatusCode.StatusInternalErr);
     }
 
-    Status acceptGame(JWTToken* token, string _gameId) {
-        // Make sure the token is valid
-        if (token is null) 
-            return Status(StatusCode.StatusDenied);
+    Status acceptGame(JWTAuthInfo token, string _gameId) {
         
         // Make sure the game exists
         Game game = Game.get(_gameId);
         if (game is null) return Status(StatusCode.StatusInvalid);
 
         // Make sure the user has the permissions to accept the CSS
-        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
-        User user = User.getFromJWT(token);
-        if (user.power < Powers.Mod) 
-            return Status(StatusCode.StatusDenied);
+        if (!User.getValidFromJWT(token.token)) return Status(StatusCode.StatusInvalid);
+        User user = User.getFromJWT(token.token);
 
         game.accept();
         return Status(StatusCode.StatusOK);
     }
 
-    Status denyGame(JWTToken* token, string _gameId) {
-        // Make sure the token is valid
-        if (token is null) 
-            return Status(StatusCode.StatusDenied);
+    @auth(Role.Mod)
+    Status denyGame(JWTAuthInfo token, string _gameId) {
         
         // Make sure the game exists
         Game game = Game.get(_gameId);
         if (game is null) return Status(StatusCode.StatusInvalid);
-
-        // Make sure the user has the permissions to deny the CSS
-        if (!User.getValidFromJWT(token)) return Status(StatusCode.StatusInvalid);
-        User user = User.getFromJWT(token);
-        if (user.power < Powers.Mod) 
-            return Status(StatusCode.StatusDenied);
 
         game.deleteGame();
         return Status(StatusCode.StatusOK);

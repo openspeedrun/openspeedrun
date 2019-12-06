@@ -73,8 +73,7 @@ interface IAuthenticationEndpoint {
     +/
     @method(HTTPMethod.POST)
     @path("/status")
-    @before!getJWTToken("token")
-    string getUserStatus(JWTToken* token);
+    string getUserStatus(JWTAuthInfo token);
 
 
     /++
@@ -88,6 +87,7 @@ interface IAuthenticationEndpoint {
 /++
     Implementation of auth endpoint
 +/
+@requiresAuth
 class AuthenticationEndpoint : IAuthenticationEndpoint {
 private:
     string createToken(User user) {
@@ -96,7 +96,6 @@ private:
         token.header.algorithm = JWTAlgorithm.HS512;
         token.payload = Json.emptyObject();
         token.payload["username"] = user.username;
-        token.payload["power"] = user.power;
 
         // TODO: Make token expire.
 
@@ -106,7 +105,11 @@ private:
     }
 
 public:
+
+    mixin implemementJWT;
+
     /// Login (bot)
+    @noAuth
     Token login(string secret) {
 
         // Get user instance
@@ -123,6 +126,7 @@ public:
     }
 
     /// Login (user)
+    @noAuth
     Token login(string username, string password) {
 
         // Get user instance
@@ -142,6 +146,7 @@ public:
     }
 
     /// Register
+    @noAuth
     string register(string username, string email, string password, string rcToken) {
         import vibe.utils.validation : validateEmail;
 
@@ -186,22 +191,25 @@ public:
     }
 
     /// Check wether registrations are open
+    @noAuth
     bool registrationOpen() {
         return CONFIG.auth.allowSignups;
     }
 
+    @noAuth
     string siteKey() {
         return CONFIG.auth.recaptchaSiteKey;
     }
 
     /// Verify user
+    @noAuth
     string verify(string verifykey) {
         if (Registration.verifyUser(verifykey)) return StatusCode.StatusOK;
         throw new HTTPStatusException(HTTPStatus.unauthorized);
     }
 
-    string getUserStatus(JWTToken* token) {
-        if (token is null) throw new HTTPStatusException(HTTPStatus.unauthorized);
-        return User.getValidFromJWT(token) ? StatusCode.StatusOK : StatusCode.StatusInvalid;
+    @auth(Role.User)
+    string getUserStatus(JWTAuthInfo token) {
+        return User.getValidFromJWT(token.token) ? StatusCode.StatusOK : StatusCode.StatusInvalid;
     }
 }

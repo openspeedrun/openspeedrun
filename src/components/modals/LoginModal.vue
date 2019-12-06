@@ -54,7 +54,7 @@
 <script lang="ts">
     import { Component, Prop, Vue } from 'vue-property-decorator';
     import { client } from '@/client';
-    import { Pronouns, Social, Runner, UserInfo } from '@/types';
+    import { Pronouns, Social, UserInfo } from '@/types';
 
     interface AuthReq {
         username: string;
@@ -108,6 +108,7 @@
                             if (response.status == 200) {
                                 let userInfo: UserInfo = response.data as UserInfo;
                                 this.$store.commit('setProfilePicture', userInfo.profile_picture as string);
+                                this.$store.commit('setDisplayName', userInfo.display_name as string);
                             }
                         });
 

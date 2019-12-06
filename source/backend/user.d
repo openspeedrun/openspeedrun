@@ -26,6 +26,8 @@ import backend.common;
 import backend.registrations;
 import config;
 import backend.auth.jwt;
+import vibe.db.mongo.collection : QueryFlags;
+import vibe.db.mongo.cursor : MongoCursor;
 
 /++
     User authentication info
@@ -202,6 +204,56 @@ class User {
         ]);
     }
 
+
+    /++
+        Search for games, returns a cursor looking at the games.
+    +/
+    static SearchResult!User search(string queryString, int page = 0, int countPerPage = 20) {
+        if (queryString == "" || queryString is null) return list(page, countPerPage);
+
+        import query : bson;
+
+        auto inquery = bson([
+            "$and": bson([
+                bson(["$or": 
+                    bson([
+                        bson(["_id": bson(["$regex": bson(queryString)])]),
+                        bson(["name": bson(["$regex": bson(queryString)])])
+                    ])
+                ]),
+                bson(["verified": bson(true)])
+            ])
+        ]);
+
+        return SearchResult!User(
+            DATABASE["speedrun.users"].count(inquery), 
+            DATABASE["speedrun.users"].find!User(
+                inquery, 
+                null, 
+                QueryFlags.None, 
+                page*countPerPage, 
+                countPerPage
+            )
+        );
+    }
+
+    static SearchResult!User list(int page = 0, int countPerPage = 20) {
+        import query : bson;
+        import std.stdio : writeln;
+        Bson inquery = bson(["verified": bson(true)]);
+
+        return SearchResult!User(
+            DATABASE["speedrun.users"].count(inquery),
+            DATABASE["speedrun.users"].find!User(
+                inquery, 
+                null, 
+                QueryFlags.None, 
+                page*countPerPage, 
+                countPerPage
+            )
+        );    
+    }
+
     static User getFromSecret(string secret) {
         return DATABASE["speedrun.users"].findOne!User([
             "$or": [
@@ -324,18 +376,21 @@ class User {
         country code for the country of origin
     +/
     @name("country")
+    @optional
     string country;
 
     /++
         Account flavourtext
     +/
     @name("flavour_text")
+    @optional
     string flavourText;
 
     /**
         Social places
     */
     @name("socials")
+    @optional
     Social[] socials;
 
     /++

@@ -127,6 +127,13 @@ class Run {
     static Run get(string runId) {
         return DATABASE["speedrun.runs"].findOne!Run(["_id": runId]);
     }
+
+    /++
+        Returns the amount of runs attributed to a user
+    +/
+    static ulong getRunCountForUser(string userId) {
+        return DATABASE["speedrun.runs"].count(["userId": userId]);
+    }
     
     /**
         Checks wether an ID was taken
@@ -146,7 +153,7 @@ class Run {
 
         The runner this refers to is the only (non mod/admin) person who may update the run data.
     */
-    @name("runnerId")
+    @name("userId")
     string posterId;
 
     /++
@@ -214,6 +221,8 @@ class Run {
     }
 
     this(RunCreationData rundata, bool fg) {
+
+        if (rundata.proof.length == 0) throw new Exception("Runs without proof are not allowed.");
 
         // Generate a unique ID, while ensuring uniqueness
         do { this.id = generateID(16); } while(Run.has(this.id));

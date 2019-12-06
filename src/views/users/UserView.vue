@@ -9,15 +9,17 @@
                             <img v-bind:src="avatarURL" alt="Profile Picture">
                         </figure>
                         <div class="panel-title h5"> {{ displayName }} </div>
+                        <span class="chip">
+                            <label> {{ pronounSubject }}/{{ pronounObject }}</label>
+                        </span>
                     </div>
 
                     <div class="panel-body">
-
                     </div>
                 </div>
             </section>
 
-            <section class="column col-9" v-if="isRunner">
+            <section class="column col-9">
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title text-center">
@@ -27,22 +29,6 @@
                         <div class="panel-body">
                             <div class="empty">
                                 <p class="empty-title h5">User has no runs</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="column col-9" v-if="!isRunner">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title text-center">
-                            Favourites
-                        </div>
-
-                        <div class="panel-body">
-                            <div class="empty">
-                                <p class="empty-title h5">User has no favourites</p>
                             </div>
                         </div>
                     </div>
@@ -69,13 +55,12 @@
 <script lang="ts">
     import { Component, Prop, Vue } from 'vue-property-decorator';
     import { client } from '@/client';
-    import { Pronouns, Social, Runner, UserInfo } from '@/types';
+    import { Pronouns, Social, UserInfo } from '@/types';
 
 
-    @Component({name: "UserPage", components: { }})
-    export default class UserPage extends Vue {
+    @Component({name: "UserView", components: { }})
+    export default class UserView extends Vue {
         @Prop({}) userInfo: UserInfo;
-        @Prop({}) runnerInfo: Runner;
 
         @Prop({}) userFound: boolean = false;
         @Prop({}) isLoading: boolean = true;
@@ -90,10 +75,6 @@
 
         get verified(): boolean {
             return this.userInfo.verified;
-        }
-
-        get isRunner(): boolean {
-            return this.runnerInfo != undefined;
         }
 
         get pronounSubject(): string {

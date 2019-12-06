@@ -6,12 +6,13 @@
             </router-link>
             <router-link class="btn btn-link btn-lg" v-bind:to="'/games'">Games</router-link>
             <router-link class="btn btn-link btn-lg" v-bind:to="'/runs'">Runs</router-link>
+            <router-link class="btn btn-link btn-lg" v-bind:to="'/users'">Users</router-link>
         </section>
         <section class="navbar-section">
             <div name="user-section" v-if="username != null">
                 <div class="dropdown dropdown-right" style="padding-right: 4px;">
                     <a href="#" class="btn btn-link btn-lg dropdown-toggle" tabindex="0">
-                        <label class="text-left" style="padding-right: 4px;">{{ username }}</label>
+                        <label class="text-left" style="padding-right: 4px;">{{ displayName }}</label>
                         <figure class="avatar">
                             <img v-bind:src="profile_picture" alt="Profile Picture">
                         </figure>
@@ -62,6 +63,10 @@
 
         get profile_picture(): string {
             return this.$store.state.srstate.profile_picture;
+        }
+
+        get displayName(): string {
+            return this.$store.state.srstate.display_name;
         }
 
         public showLogin() {

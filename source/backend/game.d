@@ -16,26 +16,12 @@
 module backend.game;
 import db;
 import backend.user;
+import backend.common;
 import vibe.data.serialization;
 import vibe.data.bson;
 import vibe.db.mongo.collection : QueryFlags;
 import vibe.db.mongo.cursor : MongoCursor;
 import std.algorithm.searching : canFind;
-
-/++
-    The result of a game search
-+/
-struct SearchResult {
-    /++
-        How many results were found in total on the server
-    +/
-    ulong resultsCount;
-
-    /++
-        The mongo cursor over the results
-    +/
-    MongoCursor!Game result;
-}
 
 /++
     Info about the game
@@ -83,10 +69,11 @@ public:
     static Game get(string gameId) {
         return DATABASE["speedrun.games"].findOne!Game(["_id": gameId]);
     }
+    
     /++
         Search for games, returns a cursor looking at the games.
     +/
-    static SearchResult search(string queryString, int page = 0, int countPerPage = 20, bool showUnapproved = false) {
+    static SearchResult!Game search(string queryString, int page = 0, int countPerPage = 20, bool showUnapproved = false) {
         if (queryString == "" || queryString is null) return list(page, countPerPage);
 
         import query : bson;
@@ -104,7 +91,7 @@ public:
                 ])
             ]);
 
-        return SearchResult(
+        return SearchResult!Game(
             DATABASE["speedrun.games"].count(inquery), 
             DATABASE["speedrun.games"].find!Game(
                 inquery, 
@@ -116,14 +103,14 @@ public:
         );
     }
 
-    static SearchResult list(int page = 0, int countPerPage = 20, bool showUnapproved = false) {
+    static SearchResult!Game list(int page = 0, int countPerPage = 20, bool showUnapproved = false) {
         import query : bson;
         import std.stdio : writeln;
         Bson inquery = (!showUnapproved) ? 
             bson(["approved": bson(true)]) : 
             Bson.emptyObject;
 
-        return SearchResult(
+        return SearchResult!Game(
             DATABASE["speedrun.games"].count(inquery),
             DATABASE["speedrun.games"].find!Game(
                 inquery, 

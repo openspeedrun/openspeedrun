@@ -13,17 +13,13 @@ export interface Social {
     link: string;
 }
 
-export interface Runner {
-    user: string;
-    country: string;
-    flavourText: string;
-    social: Social[];
-}
-
 export interface UserInfo {
     id: string;
     display_name: string;
     profile_picture: string;
     verified: boolean;
     pronouns: Pronouns;
+    country: string;
+    flavourText: string;
+    social: Social[];
 }

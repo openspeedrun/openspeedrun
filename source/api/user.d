@@ -16,6 +16,7 @@
 module api.user;
 import api.common;
 import backend.user;
+import backend.common;
 import config;
 
 
@@ -42,10 +43,9 @@ interface IUserEndpoint {
     @method(HTTPMethod.GET)
     @path("/search/:page")
     @queryParam("pgCount", "pgCount")
-    @queryParam("showPending", "showPending")
     @queryParam("query", "query")
     @noAuth
-    FEUser[] search(string query, int _page = 0, int pgCount = 20, bool showPending = false);
+    FEUser[] search(string query, int _page = 0, int pgCount = 20);
 
     /++
         Endpoint changes user info
@@ -94,6 +94,16 @@ public:
         User user = User.get(userId);
         if (user is null) throw new HTTPStatusException(404, "user not found!");
         return user.getInfo();
+    }
+
+    FEUser[] search(string query, int _page = 0, int pgCount = 20) {
+        auto search = User.search(query, _page, pgCount);
+        FEUser[] outData = new FEUser[search.resultsCount];
+        size_t i = 0;
+        foreach(User user; search.result) {
+            outData[i++] = user.getInfo();
+        }
+        return outData;
     }
 
     string update(JWTAuthInfo token, User data) {

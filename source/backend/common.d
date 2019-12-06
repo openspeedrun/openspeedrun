@@ -159,6 +159,22 @@ class SRTimeStamp {
 }
 
 /++
+    The result of a search
++/
+struct SearchResult(T) {
+    import vibe.db.mongo.cursor : MongoCursor;
+    /++
+        How many results were found in total on the server
+    +/
+    ulong resultsCount;
+
+    /++
+        The mongo cursor over the results
+    +/
+    MongoCursor!T result;
+}
+
+/++
     Exception that expresses that an element for an Action is already been used.
 +/
 class TakenException : Exception {

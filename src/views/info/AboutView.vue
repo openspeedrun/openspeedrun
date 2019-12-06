@@ -50,7 +50,7 @@
 <script lang="ts">
 import WidgetContainer from '@/components/WidgetContainer.vue'
 export default {
-    name: 'About',
+    name: 'AboutView',
     components: {
         WidgetContainer
     }

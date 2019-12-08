@@ -15,8 +15,8 @@
 		"stdx-allocator": "2.77.5",
 		"taggedalgebraic": "0.11.8",
 		"unit-threaded": "0.7.55",
-		"vibe-core": "1.7.0",
+		"vibe-core": "1.8.0",
 		"vibe-d": "0.8.6",
-		"vibe-sdlang": "1.0.0-alpha.3"
+		"vibe-sdlang": "~master"
 	}
 }

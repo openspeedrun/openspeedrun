@@ -8,7 +8,7 @@ stringImportPaths "views/" "emails/"
 
 dependency "vibe-d" version="~>0.8.6"
 dependency "secured" version="~>2.0.1"
-dependency "vibe-sdlang" version="~>1.0.0-alpha.3"
+dependency "vibe-sdlang" version="~master"
 dependency "sdlang-d" version="~>0.10.5"
 
 postBuildCommands "npm run build"

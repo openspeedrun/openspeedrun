@@ -1,0 +1,27 @@
+body {
+    background: #303742;
+    color: #fff;
+}
+
+.bg-secondary {
+    background: #16191e !important;
+    color: #fff;
+}
+
+.empty {
+    background: #181d24;
+    color: #fff;
+}
+
+.menu {
+    background: #303742;
+}
+
+a:focus, .menu .menu-item > a:hover {
+    background: #475161;
+
+}
+
+.panel {
+    border: .05rem solid #454f5e;
+}

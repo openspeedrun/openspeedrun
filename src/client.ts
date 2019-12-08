@@ -4,7 +4,6 @@ import store from '@/store';
 export const client = Axios.create({
     headers: {'Authorization': getAuthHeader()},
     validateStatus: ((status) => {
-        console.log(status);
         handleTampering(status);
         return true;
     })

@@ -21,10 +21,19 @@
                     <!--The user menu-->
                     <ul class="menu text-left">
                         <li class="menu-item">
-                            <a v-bind:href="'/users/' + username">
-                                Profile
-                            </a>
+                            <router-link v-bind:to="'/users/' + username">Profile</router-link>
                         </li>
+
+                        <li class="menu-item">
+                            <a href="javascript:void(0);">Dark Mode</a>
+                            <div class="menu-badge">
+                                <label class="form-switch">
+                                    <input type="checkbox" v-on:change="toggleDarkMode" v-bind:checked="isDarkModeOn">
+                                    <i class="form-icon"></i>
+                                </label>
+                            </div>
+                        </li>
+                        
                         <li class="menu-item">
                             <a href="#" @click="logout">
                                 Logout
@@ -67,6 +76,14 @@
 
         get displayName(): string {
             return this.$store.state.srstate.display_name;
+        }
+
+        get isDarkModeOn(): boolean {
+            return this.$store.state.srstate.dark_mode;
+        }
+
+        public toggleDarkMode() {
+            this.$store.commit('setDarkMode', !this.isDarkModeOn);
         }
 
         public showLogin() {

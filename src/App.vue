@@ -12,8 +12,24 @@
         <a href="https://github.com/openspeedrun/openspeedrun">Fork on GitHub!</a>
       </center>
     </footer>
+    <link v-if="isDarkModeOn" rel='stylesheet' type='text/css' href='/static/app/css/dark-theme.css' />
   </div>
 </template>
+
+<script lang="ts">
+
+import { Component, Vue, Prop } from 'vue-property-decorator';
+import Navbar from '@/components/Navbar.vue'
+import WidgetContainer from '@/components/WidgetContainer.vue'
+import Home from '@/views/Home.vue'
+
+@Component({components: { Navbar } })
+export default class App extends Vue {
+  get isDarkModeOn(): boolean {
+    return this.$store.state.srstate.dark_mode;
+  }
+}
+</script>
 
 <style>
 .fade-enter-active, .fade-leave-active {
@@ -23,18 +39,3 @@
   opacity: 0;
 }
 </style>
-
-<script lang="ts">
-
-import { Component, Vue } from 'vue-property-decorator';
-import Navbar from '@/components/Navbar.vue'
-import WidgetContainer from '@/components/WidgetContainer.vue'
-import Home from '@/views/Home.vue'
-
-@Component({
-  components: {
-    Navbar
-  }
-})
-export default class App extends Vue {}
-</script>

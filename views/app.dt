@@ -1,38 +1,41 @@
-extends layout
+//
+    Copyright © Clipsey 2019
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
 
-block init
-    - script("/static/app/js/chunk-vendors.js");
-    - css("/static/app/css/chunk-vendors.css");
-    - css("/static/app/css/app.css");
-    - css("https://unpkg.com/spectre.css/dist/spectre.min.css");
-    //- TODO: Add Axios
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
 
-block postdom
-    - script("/static/app/js/app.js");
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-block body
-    noscript
-        .widget
-            .widget-title
-                center
-                    h2="Oh, oops..."
-            .widget-body
-                h3="JavaScript is needed to use this page, sorry."
-                p
-                    |This page is a single-page application.
-                    br
-                    |If you have noscript on, please disable it for this site.
-                p
-                    |If you are using a browser that doesn't support javascript
-                    br
-                    |please user a browser that supports it.
-                br
-                p
-                    |Sorry for the inconvenience!
-                    br
-                    | - The Developer
+//
+    If you're a developer, check out our github repository!
+    https://github.com/openspeedrun/openspeedrun
+include utils
+doctype html
 
-block head
-    noscript
-        :css
-            .js_test { display: none; }
+html
+    head
+        // Shared header resources
+        - css("/static/app/css/style.css");
+        - script("/static/app/js/chunk-vendors.js");
+        - css("/static/app/css/chunk-vendors.css");
+        - css("/static/app/css/app.css");
+        - css("https://unpkg.com/spectre.css/dist/spectre.min.css");
+
+        meta(name="viewport", content="width=device-width, initial-scale=1.0")
+        meta(charset="utf-8")
+
+        link(rel="shortcut icon", href="/static/favicon.png")
+        link(rel="apple-touch-icon-precomposed", href="/static/favicon.png")
+
+
+    body
+        #app
+        
+        - script("/static/app/js/app.js");

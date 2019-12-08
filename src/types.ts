@@ -19,6 +19,7 @@ export interface UserInfo {
     profile_picture: string;
     verified: boolean;
     pronouns: Pronouns;
+    pronouns_enabled: boolean;
     country: string;
     flavourText: string;
     social: Social[];

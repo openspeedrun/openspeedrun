@@ -7,6 +7,7 @@ export default class SRState extends VuexModule {
     username: string | null;
     profile_picture: string | null;
     display_name: string | null;
+    dark_mode: boolean;
 
     constructor(module: Mod<ThisType<any>, any>) {
         super(module)
@@ -14,6 +15,7 @@ export default class SRState extends VuexModule {
         this.username = localStorage.getItem('username');
         this.profile_picture = localStorage.getItem('profile_picture');
         this.display_name = localStorage.getItem('display_name');
+        this.dark_mode = localStorage.getItem('dark-mode') == "true";
     }
 
     @Mutation setToken(token: string | null) { 
@@ -22,9 +24,10 @@ export default class SRState extends VuexModule {
             localStorage.setItem('auth', token as string);
         } else {
             localStorage.removeItem('auth');
-            localStorage.removeItem('username')
-            localStorage.removeItem('profile_picture')
-            localStorage.removeItem('display_name')
+            localStorage.removeItem('username');
+            localStorage.removeItem('profile_picture');
+            localStorage.removeItem('display_name');
+            localStorage.removeItem('dark-mode');
             this.username = null;
         }
     }
@@ -42,5 +45,10 @@ export default class SRState extends VuexModule {
     @Mutation setDisplayName(displayName: string | null) {
         localStorage.setItem('display_name', displayName as string);
         this.display_name = displayName;
+    }
+
+    @Mutation setDarkMode(darkMode: boolean) {
+        localStorage.setItem('dark-mode', `${darkMode}`);
+        this.dark_mode = darkMode;
     }
 } 

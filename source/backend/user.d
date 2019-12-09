@@ -222,7 +222,8 @@ class User {
                         bson(["display_name": bson(["$regex": bson(queryString)])])
                     ])
                 ]),
-                bson(["verified": bson(true)])
+                bson(["verified": bson(true)]),
+                bson(["power": bson(bson(["$gt": bson(-1)]))])
             ])
         ]);
 

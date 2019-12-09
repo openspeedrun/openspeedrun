@@ -223,7 +223,7 @@ class User {
                     ])
                 ]),
                 bson(["verified": bson(true)]),
-                bson(["power": bson(bson(["$gt": bson(-1)]))])
+                bson(["power": bson(["$gt": bson(-1)])])
             ])
         ]);
 

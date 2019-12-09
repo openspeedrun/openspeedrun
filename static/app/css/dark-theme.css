@@ -30,3 +30,8 @@ a:focus, .menu .menu-item > a:hover {
 .panel {
     border: .05rem solid #454f5e;
 }
+
+.card {
+    border: .05rem solid #454f5e;
+    background: #313a49;
+}

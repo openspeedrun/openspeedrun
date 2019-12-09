@@ -488,7 +488,7 @@ class User {
     }
 
     FEUser getInfo() {
-        return FEUser(username, displayName, profilePicture, verified, pronouns, displayPronouns);
+        return FEUser(username, displayName, profilePicture, verified, pronouns, displayPronouns, power);
     }
 }
 
@@ -533,4 +533,10 @@ struct FEUser {
     +/
     @name("pronouns_enabled")
     bool pronounsEnabled;
+
+    /++
+        The user's power level
+    +/
+    @name("powers")
+    Powers powers;
 }

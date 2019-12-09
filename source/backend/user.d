@@ -215,15 +215,15 @@ class User {
 
         auto inquery = bson([
             "$and": bson([
+                bson(["power": bson(["$gt": bson(0)])]),
+                bson(["verified": bson(true)]),
                 bson(["$or": 
                     bson([
                         bson(["_id": bson(["$regex": bson(queryString)])]),
                         bson(["name": bson(["$regex": bson(queryString)])]),
                         bson(["display_name": bson(["$regex": bson(queryString)])])
                     ])
-                ]),
-                bson(["verified": bson(true)]),
-                bson(["power": bson(["$gt": bson(-1)])])
+                ])
             ])
         ]);
 
@@ -242,7 +242,12 @@ class User {
     static SearchResult!User list(int page = 0, int countPerPage = 20) {
         import query : bson;
         import std.stdio : writeln;
-        Bson inquery = bson(["verified": bson(true)]);
+        Bson inquery = bson([
+            "$and": bson([
+                bson(["power": bson(["$gt": bson(0)])]),
+                bson(["verified": bson(true)])
+            ])
+        ]);
 
         return SearchResult!User(
             DATABASE["speedrun.users"].count(inquery),

@@ -16,10 +16,15 @@
 
         <div class="container">
             <div class="columns">
-                <user-card class="column col-2" v-for="user in users" v-bind:key="user.id"
+                <user-card 
+                    class="column col-2 col-xl-3 col-lg-4 col-md-6 col-sm-8 col-xs-12" 
+                    v-for="user in users" 
+                    v-bind:key="user.id"
+                    
                     v-bind:profile-picture="user.profile_picture"
                     v-bind:display-name="user.display_name"
                     v-bind:endpoint="user.id"
+                    v-bind:powers="user.powers"
                 />
             </div>
         </div>

@@ -1,7 +1,7 @@
 <template>
     <div class="container" style="height: 100%;">
-        <div class="columns py-2" v-if="userDefined && !isLoading">
-            <section class="column col-3">
+        <div class="columns" v-if="userDefined && !isLoading">
+            <section class="column col-3 col-md-12 py-2">
                 <div class="panel">
 
                     <div class="panel-header text-center">
@@ -9,9 +9,18 @@
                             <img v-bind:src="userInfo.profile_picture" alt="Profile Picture">
                         </figure>
                         <div class="panel-title h5"> {{ userInfo.display_name }} </div>
-                        <span class="chip bg-primary" v-if="userInfo.pronouns_enabled">
-                            <label> {{ userInfo.pronouns.subject }}/{{ userInfo.pronouns.object }}</label>
-                        </span>
+
+                        <div>
+                            <!-- Power display chip -->
+                            <span class="chip" v-bind:class="powerLevelCSS(userInfo.powers)" v-if="userInfo.powers != 1">
+                                <label> {{ powerLevelString(userInfo.powers) }}</label>
+                            </span>
+
+                            <!-- Pronouns chip -->
+                            <span class="chip bg-primary" v-if="userInfo.pronouns_enabled">
+                                <label> {{ userInfo.pronouns.subject }}/{{ userInfo.pronouns.object }}</label>
+                            </span>
+                        </div>
                     </div>
 
                     <div class="panel-body">
@@ -19,7 +28,7 @@
                 </div>
             </section>
 
-            <section class="column col-9">
+            <section class="column col-9 col-md-12 py-2">
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title text-center">
@@ -56,7 +65,7 @@
     import { Component, Prop, Vue } from 'vue-property-decorator';
     import { NavigationGuard } from 'vue-router';
     import { client } from '@/client';
-    import { Pronouns, Social, UserInfo } from '@/types';
+    import { Pronouns, Social, UserInfo, Power, powerLevelToString, powerLevelToCSS } from '@/types';
     import { Route, RawLocation, Next } from 'vue-router';
 
 
@@ -77,6 +86,14 @@
 
         mounted() {
             this.update(this.$route.params.id as string);
+        }
+
+        powerLevelString(powers: Power): string {
+            return powerLevelToString(powers);
+        }
+
+        powerLevelCSS(powers: Power): string {
+            return powerLevelToCSS(powers);
         }
 
         public update(endpoint: string) {

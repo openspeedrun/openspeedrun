@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "vue-cli-service build --no-clean"
+    "build": "vue-cli-service build --no-clean",
+    "build:local": "vue-cli-service build --no-clean --mode development --watch"
   },
   "dependencies": {
     "@types/axios": "^0.14.0",

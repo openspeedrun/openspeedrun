@@ -218,7 +218,8 @@ class User {
                 bson(["$or": 
                     bson([
                         bson(["_id": bson(["$regex": bson(queryString)])]),
-                        bson(["name": bson(["$regex": bson(queryString)])])
+                        bson(["name": bson(["$regex": bson(queryString)])]),
+                        bson(["display_name": bson(["$regex": bson(queryString)])])
                     ])
                 ]),
                 bson(["verified": bson(true)])
@@ -337,10 +338,12 @@ class User {
 
     /++
         Link to profile picture (in CDN)
+
+        By default "neumann.png"
     +/
     @name("profile_picture")
     @optional
-    string profilePicture;
+    string profilePicture = "/static/app/assets/neumann.png";
 
     /++
         Wether the user has verified their email

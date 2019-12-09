@@ -22,11 +22,12 @@ doctype html
 html
     head
         // Shared header resources
-        - css("/static/app/css/style.css");
         - script("/static/app/js/chunk-vendors.js");
         - css("/static/app/css/chunk-vendors.css");
         - css("/static/app/css/app.css");
         - css("https://unpkg.com/spectre.css/dist/spectre.min.css");
+        - css("https://unpkg.com/spectre.css/dist/spectre-exp.min.css");
+        - css("https://unpkg.com/spectre.css/dist/spectre-icons.min.css");
 
         meta(name="viewport", content="width=device-width, initial-scale=1.0")
         meta(charset="utf-8")
@@ -39,3 +40,4 @@ html
         #app
         
         - script("/static/app/js/app.js");
+        - css("/static/app/css/style.css");

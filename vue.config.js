@@ -1,5 +1,5 @@
 module.exports = {
-    outputDir: "static/app/",
+    outputDir: "static/app",
     filenameHashing: false,
     chainWebpack: config => {
         config.plugins.delete('html')

@@ -24,7 +24,7 @@
     @Component({name: "card"})
     export default class Card extends Vue {
         get hasImageSlot() : boolean {
-            return !this.hasSlot('image');
+            return this.hasSlot('image');
         }
         get hasHeaderSlot() : boolean {
             return this.hasSlot('header');

@@ -8,6 +8,11 @@ body {
     color: #fff;
 }
 
+.bg-tertiary {
+    background: #313a49 !important;
+    color: #fff;
+}
+
 .empty {
     background: #181d24;
     color: #fff;

@@ -64,7 +64,11 @@
     export default class Navbar extends Vue {
         @Ref() loginModal: LoginModal;
         @Ref() registerModal: RegisterModal;
-        @Prop({}) allowRegistrations: boolean;
+        private allowRegistrations_: boolean;
+
+        public allowRegistrations(): boolean {
+            return this.allowRegistrations_;
+        }
 
         get username(): string {
             return this.$store.state.srstate.username;
@@ -105,7 +109,7 @@
 
         mounted() {
             client.get("/api/v1/auth/regstatus").then(response => {
-                this.allowRegistrations = response.data as boolean; 
+                this.allowRegistrations_ = response.data as boolean; 
             });
         }
     }

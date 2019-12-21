@@ -1,3 +1,6 @@
+# NOTE
+OSR has been split up in to 2 repositories, [frontend](https://github.com/openspeedrun/osr-frontend) and [backend](https://github.com/openspeedrun/osr-backend)
+
 # OSR
 Open source experimental leaderboard for speedruns written in D and vibe.d
 
